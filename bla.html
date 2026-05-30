@@ -577,12 +577,12 @@
       /* snap all to the centre (no transition) so each one expands FROM the middle */
       cards.forEach(el=>{ el.style.transition='none'; el.style.transform='translate(-50%,-50%)'; });
       void deck.offsetWidth;
-      /* Phase 2 — spread out from the centre toward BOTH sides at once (delay by distance from centre) */
+      /* Phase 2 — spread from the OUTER edges (nearest) inward to the centre (deepest) */
       const d=Math.min(0.05, 0.9/Math.max(vis,1)), c=(vis-1)/2;
       let maxDelay=0;
       cards.forEach((el,i)=>{
         if(i<vis){
-          const delay=Math.abs(i-c)*d; if(delay>maxDelay) maxDelay=delay;
+          const delay=(c-Math.abs(i-c))*d; if(delay>maxDelay) maxDelay=delay;
           el.style.transition='transform .55s cubic-bezier(.2,.85,.25,1) '+delay.toFixed(3)+'s, opacity .4s ease '+delay.toFixed(3)+'s';
           const p=poseOf(i); el.style.transform=p.t; el.style.zIndex=p.z; el.style.opacity=''; el.style.pointerEvents='';
         } else {
