@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<title>Bla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#1b1a3a; --bg2:#322a6e; --bg3:#1e9bd1;
+    --ink:#1d2230; --muted:#9aa0ad;
+    --s1a:#ff8a4c; --s1b:#ff4d6d;
+    --s2a:#36b7f5; --s2b:#5a6bff;
+    --s3a:#b162ff; --s3b:#ff5fb0;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow:hidden;}
+  body{
+    font-family:"Archivo",sans-serif;color:#fff;
+    background:
+      radial-gradient(60% 50% at 18% 12%, rgba(255,95,176,.30) 0%, transparent 55%),
+      radial-gradient(60% 50% at 86% 84%, rgba(54,183,245,.32) 0%, transparent 55%),
+      linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 52%, #163a63 100%);
+    user-select:none;
+  }
+  #app{height:100dvh;display:flex;flex-direction:column;position:relative;}
+
+  /* floating background blobs */
+  .blob{position:fixed;border-radius:50%;filter:blur(60px);opacity:.45;z-index:0;}
+  .blob.a{width:42vmax;height:42vmax;left:-12vmax;top:-10vmax;background:#ff5fb0;animation:drift1 18s ease-in-out infinite;}
+  .blob.b{width:38vmax;height:38vmax;right:-12vmax;bottom:-12vmax;background:#36b7f5;animation:drift2 22s ease-in-out infinite;}
+  @keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(4vmax,3vmax)}}
+  @keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-4vmax,-3vmax)}}
+
+  .screen{display:none;flex:1;flex-direction:column;position:relative;z-index:2;min-height:0;}
+  .screen.active{display:flex;animation:fade .5s ease;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+
+  .brand{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;letter-spacing:-.02em;}
+
+  /* ---------- SETUP ---------- */
+  #setup{align-items:center;justify-content:center;padding:24px;}
+  #setup .brand{font-size:46px;margin-bottom:4px;}
+  .sub{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:28px;}
+  .rows{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;}
+  .row{display:flex;gap:10px;align-items:center;}
+  .name{flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);
+    border-radius:16px;padding:13px 16px;color:#fff;font-family:"Archivo";font-size:16px;font-weight:500;outline:none;transition:.2s;}
+  .name::placeholder{color:rgba(255,255,255,.45);}
+  .name:focus{border-color:#fff;background:rgba(255,255,255,.16);}
+  .gw{display:flex;background:rgba(255,255,255,.08);border-radius:14px;padding:3px;}
+  .g{border:none;background:transparent;color:rgba(255,255,255,.7);font-family:"Archivo";font-weight:600;
+    font-size:13px;padding:9px 12px;border-radius:11px;cursor:pointer;transition:.2s;}
+  .g.on[data-g="f"]{background:linear-gradient(135deg,#ff5fb0,#ff4d6d);color:#fff;}
+  .g.on[data-g="m"]{background:linear-gradient(135deg,#36b7f5,#5a6bff);color:#fff;}
+  .cta{margin-top:30px;border:none;cursor:pointer;font-family:"Bricolage Grotesque";font-weight:700;font-size:17px;
+    color:#1b1a3a;background:#fff;padding:16px 46px;border-radius:40px;transition:.2s;
+    box-shadow:0 12px 34px rgba(0,0,0,.28);}
+  .cta:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(0,0,0,.34);}
+
+  /* ---------- GAME ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;z-index:6;}
+  .topbar .brand{font-size:24px;color:#fff;}
+  .kebab{position:relative;}
+  .kebab>button{width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.12);
+    color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;}
+  .kebab>button:hover{background:rgba(255,255,255,.22);}
+  .menu{position:absolute;right:0;top:48px;background:#fff;color:var(--ink);border-radius:16px;
+    box-shadow:0 18px 40px rgba(0,0,0,.3);overflow:hidden;min-width:190px;display:none;z-index:20;}
+  .menu.open{display:block;animation:fade .2s ease;}
+  .menu button{display:block;width:100%;text-align:left;border:none;background:none;font-family:"Archivo";
+    font-size:14px;font-weight:500;padding:14px 18px;cursor:pointer;color:var(--ink);transition:.15s;}
+  .menu button:hover{background:#f3f4f8;}
+  .menu button+button{border-top:1px solid #eef0f4;}
+
+  .deck-area{flex:1;position:relative;min-height:0;overflow:hidden;touch-action:none;cursor:grab;}
+  .deck-area:active{cursor:grabbing;}
+  .deck{position:absolute;inset:0;perspective:1200px;animation:sway 10s ease-in-out infinite;}
+  @keyframes sway{0%,100%{transform:rotate(-1.1deg)}50%{transform:rotate(1.1deg)}}
+  .deck.frozen{animation-play-state:paused;}
+  .deck.frozen .floater{animation-play-state:paused;}
+  .deck.presenting .card:not(.out){opacity:.18;filter:saturate(.85);}
+
+  .card{position:absolute;left:50%;top:50%;
+    width:clamp(200px,57vw,242px);aspect-ratio:5/7;cursor:pointer;
+    transition:transform .68s cubic-bezier(.2,.8,.22,1), opacity .45s ease;}
+  /* pulled out toward the viewer uses a springier curve (transform set inline) */
+  .card.out{transition-timing-function:cubic-bezier(.34,1.3,.5,1);}
+  .floater{position:absolute;inset:0;perspective:1000px;animation:float 5.6s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  .flip{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .68s cubic-bezier(.3,.8,.25,1);}
+  .card.flipped .flip{transform:rotateY(180deg);}
+
+  .face{position:absolute;inset:0;border-radius:22px;overflow:hidden;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    box-shadow:0 16px 34px rgba(0,0,0,.34);}
+  .card.out .face{box-shadow:0 34px 70px rgba(0,0,0,.5);}
+  .back{display:flex;align-items:flex-end;padding:18px;}
+  .back .bk{position:relative;font-family:"Bricolage Grotesque";font-weight:800;font-size:18.9px;color:rgba(255,255,255,.95);letter-spacing:-.01em;max-width:calc(100% - 12px);line-height:1.02;overflow-wrap:anywhere;}
+  .back .pip{position:absolute;top:16px;right:18px;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.55);}
+
+  .front{transform:rotateY(180deg);background:#fff;display:flex;flex-direction:column;}
+  .fhead{padding:16px 18px 15px;color:#fff;display:flex;flex-direction:column;gap:3px;}
+  .fserie{font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;opacity:.92;}
+  .fname{font-family:"Bricolage Grotesque";font-weight:800;font-size:clamp(22px,6.4vw,30px);line-height:1;}
+  .fbody{flex:1;display:flex;align-items:center;justify-content:center;padding:14px 18px;overflow:auto;}
+  .fbody::-webkit-scrollbar{width:0;}
+  .fq{font-family:"Bricolage Grotesque";font-weight:500;color:var(--ink);text-align:center;
+    font-size:clamp(15px,4vw,19px);line-height:1.42;text-wrap:balance;}
+  .fq .w{display:inline-block;opacity:0;transform:translateY(7px);}
+  .card.flipped .fq .w{animation:wordIn .5s forwards;}
+  @keyframes wordIn{to{opacity:1;transform:none;}}
+  .ffoot{padding:11px;font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--muted);
+    text-align:center;border-top:1px solid #eef0f4;}
+
+  /* bottom bar */
+  .bottom{padding:18px 20px calc(20px + env(safe-area-inset-bottom));z-index:6;
+    display:flex;flex-direction:column;align-items:center;gap:14px;min-height:96px;justify-content:center;}
+  .top-actions{display:flex;gap:10px;}
+  .icon-btn{width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.12);
+    color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;}
+  .icon-btn:hover{background:rgba(255,255,255,.22);}
+  .icon-btn:active{transform:scale(.94);}
+  .icon-btn svg{width:19px;height:19px;}
+  .prompt{font-size:14px;font-weight:500;letter-spacing:.04em;color:rgba(255,255,255,.85);
+    animation:pulse 2.6s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+  .actions{display:none;gap:12px;}
+  .actions.show{display:flex;animation:fade .4s ease;}
+  .btn{border:none;cursor:pointer;font-family:"Bricolage Grotesque";font-weight:700;font-size:14px;
+    padding:14px 24px;border-radius:38px;transition:.2s;}
+  .btn.fill{color:#1b1a3a;background:#fff;box-shadow:0 10px 26px rgba(0,0,0,.3);}
+  .btn.fill:hover{transform:translateY(-2px);}
+  .btn.ghost{color:#fff;background:rgba(255,255,255,.12);}
+  .btn.ghost:hover{background:rgba(255,255,255,.2);}
+  .hint{height:18px;margin-top:14px;font-size:13px;font-weight:500;color:#ffd1de;opacity:0;transition:opacity .3s;}
+  .hint.show{opacity:1;}
+  .reset-x{position:absolute;top:16px;right:18px;width:38px;height:38px;border-radius:50%;border:none;
+    background:rgba(255,255,255,.1);color:#fff;font-size:14px;cursor:pointer;transition:.2s;
+    display:flex;align-items:center;justify-content:center;}
+  .reset-x:hover{background:rgba(255,255,255,.22);transform:rotate(90deg);}
+</style>
+</head>
+<body>
+<div class="blob a"></div><div class="blob b"></div>
+<div id="app">
+
+  <!-- SETUP -->
+  <section id="setup" class="screen active">
+    <button id="reset" class="reset-x" title="Oublier les prénoms" aria-label="Réinitialiser les prénoms">✕</button>
+    <div class="brand">Bla</div>
+    <div class="sub">Quatre joueur·euses. Une carte à la fois.</div>
+    <div id="rows" class="rows"></div>
+    <div id="hint" class="hint"></div>
+    <button id="start" class="cta">Jouer</button>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="screen">
+    <div class="topbar">
+      <div class="brand">Bla</div>
+      <div class="top-actions">
+        <button id="shuffle" class="icon-btn" aria-label="Mélanger" title="Mélanger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></svg>
+        </button>
+        <button id="editPlayers" class="icon-btn" aria-label="Joueurs" title="Joueurs">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.6"/><path d="M17.5 14c2.3.4 4 2.3 4 5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="deck-area">
+      <div id="deck" class="deck"></div>
+    </div>
+
+    <div class="bottom">
+      <div id="prompt" class="prompt">Touche une carte</div>
+      <div id="actions" class="actions">
+        <button id="again" class="btn ghost">Piger à nouveau</button>
+        <button id="next" class="btn fill">Au suivant</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  const SETS={
+    1:[
+      "Si tu pouvais choisir n'importe qui dans le monde, qui inviterais-tu à dîner ?",
+      "Aimerais-tu être célèbre ? De quelle manière ?",
+      "Avant de passer un appel, t'arrive-t-il de répéter ce que tu vas dire ? Pourquoi ?",
+      "Que serait pour toi une journée parfaite ?",
+      "Quand as-tu chanté pour toi-même la dernière fois ? Et pour quelqu'un d'autre ?",
+      "Vivre jusqu'à 90 ans en gardant l'esprit ou le corps d'une personne de 30 ans : lequel choisirais-tu ?",
+      "As-tu une intuition secrète sur la façon dont tu vas mourir ?",
+      "Nomme trois choses que toi et {P} semblez avoir en commun.",
+      "De quoi es-tu {le plus reconnaissant|la plus reconnaissante} dans ta vie ?",
+      "Si tu pouvais changer une chose dans la façon dont tu as été {élevé|élevée}, ce serait quoi ?",
+      "Raconte à {P} l'histoire de ta vie en quatre minutes, le plus en détail possible.",
+      "Si tu te réveillais demain avec une nouvelle qualité ou capacité, laquelle aimerais-tu ?"
+    ],
+    2:[
+      "Si une boule de cristal disait la vérité sur toi, ta vie ou l'avenir, que voudrais-tu savoir ?",
+      "Qu'est-ce que tu rêves de faire depuis longtemps ? Pourquoi ne l'as-tu pas encore fait ?",
+      "Quelle est la plus grande réussite de ta vie ?",
+      "Qu'est-ce que tu valorises le plus dans une amitié ?",
+      "Quel est ton souvenir le plus précieux ?",
+      "Quel est ton souvenir le plus terrible ?",
+      "Si tu mourais subitement dans un an, changerais-tu ta façon de vivre ? Pourquoi ?",
+      "Que signifie l'amitié pour toi ?",
+      "Quel rôle jouent l'amour et l'affection dans ta vie ?",
+      "Nomme une qualité positive de {P}. À tour de rôle, cinq au total.",
+      "Ta famille est-elle proche et chaleureuse ? Ton enfance a-t-elle été plus heureuse que la moyenne ?",
+      "Comment te sens-tu par rapport à ta relation avec ta mère ?"
+    ],
+    3:[
+      "Formule trois phrases vraies commençant par « nous ». Par exemple : « Nous ressentons tous les deux… »",
+      "Complète : « J'aimerais avoir quelqu'un avec qui partager… »",
+      "Si tu devenais {un ami proche|une amie proche} {deP}, qu'est-ce qui serait important qu'{p:il|elle} sache de toi ?",
+      "Dis à {P} ce que tu aimes chez {p:lui|elle}, très honnêtement.",
+      "Partage avec {P} un moment embarrassant de ta vie.",
+      "Quand as-tu pleuré devant quelqu'un la dernière fois ? Et {seul|seule} ?",
+      "Dis à {P} une chose que tu apprécies déjà chez {p:lui|elle}.",
+      "Y a-t-il un sujet trop sérieux pour qu'on en plaisante ?",
+      "Si tu mourais ce soir, que regretterais-tu le plus de ne pas avoir dit ? Pourquoi le tais-tu encore ?",
+      "Ta maison brûle. Après tes proches et tes animaux, tu sauves un dernier objet. Lequel ? Pourquoi ?",
+      "Dans ta famille, quelle mort te bouleverserait le plus ? Pourquoi ?",
+      "Confie un problème personnel à {P} et demande-lui comment {p:il|elle} s'y prendrait à ta place."
+    ]
+  };
+  const ROMAN={1:"I",2:"II",3:"III"};
+  const ALL=[]; let c=0;
+  for(const s of [1,2,3]) SETS[s].forEach((_,i)=>{c++;ALL.push({serie:s,idx:i,n:c});});
+
+  const SGRAD={1:"linear-gradient(135deg,var(--s1a),var(--s1b))",
+               2:"linear-gradient(135deg,var(--s2a),var(--s2b))",
+               3:"linear-gradient(135deg,var(--s3a),var(--s3b))"};
+  /* each back = a motif layered over a colour gradient */
+  const W=a=>"rgba(255,255,255,"+a+")";
+  const CARDS=[
+    {g:"linear-gradient(150deg,#ff8a4c,#ff4d6d)", p:"radial-gradient(circle, "+W(.28)+" 2px, transparent 2.6px) 0 0/16px 16px"},
+    {g:"linear-gradient(150deg,#36b7f5,#5a6bff)", p:"repeating-linear-gradient(45deg, "+W(.16)+" 0 9px, transparent 9px 18px)"},
+    {g:"linear-gradient(150deg,#b162ff,#ff5fb0)", p:"repeating-radial-gradient(circle at 30% 18%, "+W(.18)+" 0 1.5px, transparent 1.5px 15px)"},
+    {g:"linear-gradient(150deg,#22c55e,#0ea5a3)", p:"linear-gradient("+W(.14)+" 1px, transparent 1px) 0 0/100% 20px, linear-gradient(90deg, "+W(.14)+" 1px, transparent 1px) 0 0/20px 100%"},
+    {g:"linear-gradient(150deg,#f59e0b,#ef4444)", p:"repeating-linear-gradient(135deg, "+W(.16)+" 0 7px, transparent 7px 14px), repeating-linear-gradient(45deg, "+W(.10)+" 0 7px, transparent 7px 14px)"},
+    {g:"linear-gradient(150deg,#0ea5e9,#22d3ee)", p:"radial-gradient(circle at 50% 120%, "+W(.20)+" 0 8px, transparent 9px) 0 0/30px 30px"},
+    {g:"linear-gradient(150deg,#8b5cf6,#6366f1)", p:"repeating-linear-gradient(90deg, "+W(.15)+" 0 2px, transparent 2px 13px)"},
+    {g:"linear-gradient(150deg,#ec4899,#f43f5e)", p:"radial-gradient("+W(.22)+" 1.6px, transparent 1.7px) 0 0/14px 14px, radial-gradient("+W(.22)+" 1.6px, transparent 1.7px) 7px 7px/14px 14px"},
+    {g:"linear-gradient(150deg,#14b8a6,#3b82f6)", p:"repeating-linear-gradient(0deg, "+W(.12)+" 0 8px, transparent 8px 16px), repeating-linear-gradient(90deg, "+W(.12)+" 0 8px, transparent 8px 16px)"}
+  ];
+
+  const $=id=>document.getElementById(id);
+  const rand=n=>Math.floor(Math.random()*n);
+  function resolve(text, fem, partner){
+    const deP = partner ? (/^[aeiouhéèàâêîï]/i.test(partner.name) ? "d'"+partner.name : "de "+partner.name) : "de l'autre";
+    text=text.replace(/\{deP\}/g, deP).replace(/\{P\}/g, partner?partner.name:"l'autre");
+    return text.replace(/\{(p:)?([^|}]+)\|([^}]+)\}/g,(_,p,a,b)=>{
+      const useFem = p ? (partner?partner.fem:false) : fem;
+      return useFem ? b : a;
+    });
+  }
+
+  /* ---------- setup ---------- */
+  /* ---------- gender from first name (heuristic) ---------- */
+  const set=s=>new Set(s.split(/\s+/).filter(Boolean));
+  const FEM=set("marie sophie julie isabelle nathalie catherine caroline stephanie valerie melanie anne annie claire chloe lea lola alice jade rose olivia charlotte juliette manon sandrine sandra lise maelle olga christina audrey genevieve josee joelle johanne sylvie francine ginette helene jeanne jeannine louise lucie martine michele monique nicole pauline renee suzanne therese veronique virginie amelie amelia anais beatrice brigitte celine chantal claudine colette denise diane edith elise elodie emilie emma estelle eve eva fanny florence gabrielle ines jacqueline karine laurie leonie maeva margot mathilde maud maya mireille myriam noemie oceane pascale patricia paule roxane sabrina salome sarah sara simone solene sonia valentine yolande zoe amandine aurelie cecile clemence constance delphine eleonore fleur gaelle ophelie perrine severine agathe apolline capucine manel nour lina lily mila ambre eline romane lucile marion mona nina soraya yasmine maika rosalie laurence flavie frederique naomi nadia rania amira fatima aisha awa mariam marianne madeleine margaux melissa megane laetitia ludivine morgane oriane prune thais");
+  const MASC=set("gaetan jean pierre paul jacques michel andre alain bernard daniel denis francois gilles guy henri louis luc marc martin maurice olivier patrick philippe raymond rene robert roger serge yves alexandre antoine benjamin charles christophe david etienne fabien frederic gabriel gregoire guillaume hugo jerome julien kevin leo lucas mathieu matheo maxime nicolas noah raphael remy remi romain samuel sebastien theo thomas tristan vincent william xavier yannick adam aaron alexis arnaud arthur baptiste bastien cedric clement corentin cyril damien dorian edouard emile enzo evan florent gaspard gauthier georges hadrien hubert ismael jonathan jordan joseph jules leon lionel loic ludovic marius mateo nathan noe octave oscar pascal quentin rayan stanislas sylvain valentin victor yanis zacharie dominic michael christian simon felix anthony jeremy steeve stephane eric marcel ronald gaston armand fernand");
+  const AMB=set("dominique claude camille sacha sasha alex sam charlie morgan kim andrea ange dany lou eden swann noa");
+  function strip(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z\- ]/g,'').trim();}
+  function detect(raw){
+    if(!raw) return null;
+    const n=strip(raw); if(!n) return null;
+    const first=n.split(/[\- ]+/)[0]||n;
+    for(const k of [n,first]){
+      if(AMB.has(k)) return null;
+      if(FEM.has(k)) return 'f';
+      if(MASC.has(k)) return 'm';
+    }
+    if(/(ette|elle|enne|ine|ie|ee|ence|ance|ina|ana)$/.test(first)) return 'f';
+    if(/a$/.test(first)) return 'f';
+    if(/[bcdfgjklmnpqrstvxz]$/.test(first) || /[oiu]$/.test(first)) return 'm';
+    return null;
+  }
+
+  const rowsEl=$('rows');
+  function buildRows(list){
+    rowsEl.innerHTML='';
+    list.forEach(p=>{
+      const row=document.createElement('div'); row.className='row';
+      row.innerHTML='<input class="name" maxlength="18" placeholder="Prénom" autocomplete="off" autocapitalize="words">'+
+        '<div class="gw"><button class="g" data-g="f">elle</button><button class="g" data-g="m">il</button></div>';
+      const input=row.querySelector('.name'); input.value=p.name||'';
+      let manual=false;
+      const setG=g=>row.querySelectorAll('.g').forEach(x=>x.classList.toggle('on',x.dataset.g===g));
+      setG(p.g);
+      input.addEventListener('input',()=>{ if(manual) return; const g=detect(input.value); if(g) setG(g); });
+      row.querySelectorAll('.g').forEach(b=>{ b.onclick=()=>{manual=true;setG(b.dataset.g);}; });
+      rowsEl.appendChild(row);
+    });
+  }
+  let players=[];
+
+  /* ---- remember names between games ---- */
+  const LS='bla.players';
+  const DEFAULTS=[{name:'',g:'f'},{name:'',g:'m'},{name:'',g:'f'},{name:'',g:'m'}];
+  function loadSaved(){
+    try{ const a=JSON.parse(localStorage.getItem(LS)); if(Array.isArray(a)&&a.length) return a; }catch(e){}
+    return null;
+  }
+  function saveNames(list){ try{ localStorage.setItem(LS, JSON.stringify(list)); }catch(e){} }
+  function padded(list){ list=list.slice(0,4); while(list.length<4) list.push({name:'',g:list.length%2?'m':'f'}); return list; }
+
+  buildRows(padded(loadSaved()||DEFAULTS.map(d=>({...d}))));
+
+  $('reset').onclick=()=>{
+    try{ localStorage.removeItem(LS); }catch(e){}
+    buildRows(DEFAULTS.map(d=>({...d})));
+    $('hint').classList.remove('show');
+  };
+
+  $('start').onclick=()=>{
+    const list=[...rowsEl.querySelectorAll('.row')].map(r=>({
+      name:r.querySelector('.name').value.trim(),
+      fem:r.querySelector('.g.on').dataset.g==='f'
+    })).filter(p=>p.name);
+    if(list.length<2){ $('hint').textContent='Il faut au moins deux prénoms.'; $('hint').classList.add('show'); return; }
+    players=list; $('hint').classList.remove('show');
+    saveNames(players.map(p=>({name:p.name,g:p.fem?'f':'m'})));
+    $('setup').classList.remove('active');
+    $('game').classList.add('active');
+    startGame();
+  };
+
+  /* ---------- deck ---------- */
+  const deck=$('deck');
+  let cards=[], built=false;
+  function buildDeck(){
+    deck.innerHTML=''; cards=[];
+    for(let i=0;i<N;i++){
+      const el=document.createElement('div'); el.className='card';
+      const cc=CARDS[i%CARDS.length];
+      el.dataset.bg=cc.p+', '+cc.g;
+      el.innerHTML=
+        '<div class="floater"><div class="flip">'+
+          '<div class="face back" style="background:'+cc.p+', '+cc.g+'"><span class="pip"></span><span class="bk">Bla</span></div>'+
+          '<div class="face front">'+
+            '<div class="fhead"><span class="fserie"></span><span class="fname"></span></div>'+
+            '<div class="fbody"><p class="fq"></p></div>'+
+            '<div class="ffoot"></div>'+
+          '</div>'+
+        '</div></div>';
+      el.querySelector('.floater').style.animationDelay=(-i*0.55)+'s';
+      deck.appendChild(el); cards.push(el);
+    }
+    built=true;
+  }
+
+  /* ---------- game state ---------- */
+  const N=ALL.length, AMP=44, TILT=13;
+  const KFIX=2*Math.PI/70;                 /* sine wavelength ≈ 70vw — cards ride a fixed wave */
+  let curPlayer=0, curEl=null, animating=false, pan=0, vis=N;
+
+  /* spacing between cards (vw): roomy when few remain, compressed when many — fan ≤ ~360vw */
+  function spacingFor(v){ return v<=1 ? 0 : Math.min(26, 360/(v-1)); }
+  function clampPan(){ const h=(vis-1)/2*spacingFor(vis); if(pan>h) pan=h; else if(pan<-h) pan=-h; }
+
+  /* the farandole shows exactly as many cards as the current player has questions left */
+  function computeVis(){
+    const pl=players[curPlayer];
+    let r = pl._q ? (pl._q.length-pl._qp) : ALL.length;
+    if(r<=0){ pl._q=shuffledIdx(); pl._qp=0; r=ALL.length; }   /* pile épuisée → on rebrasse */
+    vis=Math.max(1, Math.min(r, N));
+  }
+
+  /* finite fan: cards on a fixed sine, centred; pan slides them (no loop, real start/end) */
+  function poseOf(i){
+    const sp=spacingFor(vis);
+    const x=(i-(vis-1)/2)*sp + pan, phase=x*KFIX;
+    return { t:'translate(-50%,-50%) translate('+x.toFixed(2)+'vw,'+(AMP*Math.sin(phase)).toFixed(1)+'px) rotate('+(TILT*Math.cos(phase)).toFixed(2)+'deg)', z:i };
+  }
+  function layout(){ for(let i=0;i<cards.length;i++){ const el=cards[i]; if(el===curEl||i>=vis) continue; const p=poseOf(i); el.style.transform=p.t; el.style.zIndex=p.z; } }
+
+  /* resize the farandole; show `vis` cards, hide the rest */
+  function applyVis(){
+    computeVis(); clampPan();
+    cards.forEach((el,i)=>{
+      if(i<vis){ el.style.pointerEvents=''; const p=poseOf(i); el.style.transform=p.t; el.style.zIndex=p.z; el.style.opacity=''; }
+      else { el.style.pointerEvents='none'; el.style.opacity='0'; el.style.transform='translate(-50%,-50%) translateY(20px) scale(.6)'; }
+    });
+  }
+
+  /* each player keeps their own shuffled pile → never the same question twice (until all 36 seen) */
+  function shuffledIdx(){ const a=ALL.map((_,i)=>i); for(let i=a.length-1;i>0;i--){const j=rand(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; }
+  function nextQ(p){ const pl=players[p]; if(!pl._q||pl._qp>=pl._q.length){ pl._q=shuffledIdx(); pl._qp=0; } return ALL[pl._q[pl._qp++]]; }
+
+  /* the deck "belongs" to whoever's turn it is → their name on every back */
+  function setBacks(){ const nm=players[curPlayer]?players[curPlayer].name:''; cards.forEach(el=>{ const b=el.querySelector('.bk'); if(b) b.textContent=nm; }); }
+
+  /* redistribute colours + patterns; never two identical side by side (linear: any prefix stays valid) */
+  function paintCards(){
+    const conflict=(a,b)=> a.g===b.g||a.p===b.p;
+    const n=cards.length;
+    let pool=cards.map((_,i)=>CARDS[i%CARDS.length]);
+    const valid=p=>{ for(let i=1;i<n;i++){ if(conflict(p[i],p[i-1])) return false; } return true; };
+    let ok=false;
+    for(let a=0;a<300&&!ok;a++){ for(let i=n-1;i>0;i--){const j=rand(i+1);[pool[i],pool[j]]=[pool[j],pool[i]];} ok=valid(pool); }
+    if(!ok){
+      for(let i=1;i<n;i++){
+        if(conflict(pool[i],pool[i-1])){
+          for(let j=i+1;j<n;j++){
+            if(!conflict(pool[j],pool[i-1]) && (i+1>=n || !conflict(pool[j],pool[i+1]))){ [pool[i],pool[j]]=[pool[j],pool[i]]; break; }
+          }
+        }
+      }
+    }
+    cards.forEach((el,i)=>{ const bg=pool[i].p+', '+pool[i].g; el.dataset.bg=bg; el.querySelector('.face.back').style.background=bg; });
+  }
+
+  function startGame(){
+    if(!built) buildDeck();
+    curPlayer=rand(players.length);
+    reshuffleDeck();
+  }
+
+  /* reshuffle the cards but keep the same player (top-right Mélanger button) */
+  function reshuffleDeck(){
+    if(!built) buildDeck();
+    pan=0; cancelInertia(); paintCards(); curEl=null;
+    computeVis();
+    cards.forEach(el=>el.classList.remove('out','flipped'));
+    deck.classList.remove('frozen','presenting');
+    $('actions').classList.remove('show');
+    deploy();
+  }
+
+  /* the visible cards fan out from a closed stack */
+  function deploy(){
+    animating=true; setBacks();
+    const d=Math.min(0.04, 0.8/Math.max(vis,1));
+    cards.forEach(el=>{ el.style.transition='none'; el.style.transform='translate(-50%,-50%) translateY(20px) scale(.72)'; el.style.opacity='0'; });
+    void deck.offsetWidth;
+    cards.forEach((el,i)=>{
+      if(i<vis){
+        el.style.transition='transform .55s cubic-bezier(.2,.85,.25,1) '+(i*d).toFixed(3)+'s, opacity .38s ease '+(i*d).toFixed(3)+'s';
+        const p=poseOf(i); el.style.transform=p.t; el.style.zIndex=p.z; el.style.opacity=''; el.style.pointerEvents='';
+      } else { el.style.pointerEvents='none'; }
+    });
+    showPrompt();
+    setTimeout(()=>{ cards.forEach(el=>{el.style.transition='';}); animating=false; }, 700+vis*d*1000);
+  }
+
+  function showPrompt(){
+    $('prompt').textContent='Au tour de '+players[curPlayer].name+' · touche une carte';
+    $('prompt').style.display='';
+  }
+
+  function renderQ(el,text){
+    /* resserrement : pas d'espace (insécable comprise) avant ? ! : ; » ni après « */
+    text=text.replace(/\s+([?!:;»])/g,'$1').replace(/«\s+/g,'«');
+    const q=el.querySelector('.fq'); q.innerHTML='';
+    text.split(' ').forEach((w,k,arr)=>{
+      const s=document.createElement('span'); s.className='w'; s.textContent=w;
+      s.style.animationDelay=(0.30+k*0.02)+'s';
+      q.appendChild(s); if(k<arr.length-1) q.appendChild(document.createTextNode(' '));
+    });
+  }
+  function fill(el,person,q,partner){
+    el.querySelector('.fhead').style.background=el.dataset.bg;   /* recto = couleur + motif de CETTE carte */
+    el.querySelector('.fserie').textContent='Série '+ROMAN[q.serie];
+    el.querySelector('.fname').textContent=person.name;
+    el.querySelector('.ffoot').textContent='Question '+q.n+' / 36';
+    renderQ(el, resolve(SETS[q.serie][q.idx], person.fem, partner));
+  }
+
+  /* slide a card back into the farandole, at its own depth (or hide if beyond the pile) */
+  function sendBack(el){
+    el.classList.remove('out','flipped');
+    const i=cards.indexOf(el);
+    if(i<vis){ const p=poseOf(i); el.style.transform=p.t; el.style.zIndex=p.z; el.style.opacity=''; }
+    else { el.style.opacity='0'; el.style.pointerEvents='none'; el.style.transform='translate(-50%,-50%) translateY(20px) scale(.6)'; }
+  }
+
+  /* the touched card leaves the wave toward the viewer and flips */
+  function pullOut(el){
+    if(animating) return; animating=true;
+    const person=players[curPlayer], q=nextQ(curPlayer), raw=SETS[q.serie][q.idx];
+    let partner=null;
+    if(/\{P\}|\{deP\}|\{p:/.test(raw) && players.length>1){
+      let pj; do{pj=rand(players.length);}while(pj===curPlayer); partner=players[pj];
+    }
+    const reveal=()=>{
+      fill(el,person,q,partner);
+      el.classList.add('out','flipped');
+      el.style.zIndex=999;
+      const tilt=(Math.random()*8-4).toFixed(2);   /* léger angle imparfait, plus naturel */
+      el.style.transform='translate(-50%,-50%) translateY(-8px) translateZ(78px) scale(1.04) rotate('+tilt+'deg)';
+      deck.classList.add('frozen','presenting');
+      curEl=el;
+      $('prompt').style.display='none';
+      $('actions').classList.add('show');
+      setTimeout(()=>{animating=false;},700);
+    };
+    if(curEl && curEl!==el){
+      $('actions').classList.remove('show');
+      sendBack(curEl); curEl=null;
+      setTimeout(reveal,280);
+    }else{ reveal(); }
+  }
+
+  /* the open card slides back into the deck */
+  function putBack(reshuffle){
+    if(!curEl) return;
+    curEl.classList.remove('out','flipped'); curEl=null;
+    deck.classList.remove('frozen','presenting');
+    $('actions').classList.remove('show');
+    pan=0; cancelInertia();
+    if(reshuffle) paintCards();       /* nouveau tas à chaque changement de joueur */
+    showPrompt();
+    applyVis();
+    setBacks();
+    animating=true; setTimeout(()=>animating=false,420);
+  }
+
+  $('again').onclick=()=>{ if(animating) return; putBack(false); };                                   /* même joueur : on garde le tas */
+  $('next').onclick=()=>{ if(animating) return; curPlayer=(curPlayer+1)%players.length; putBack(true); }; /* joueur suivant : nouveau tas + prénom */
+
+  /* ---------- finite left/right drag, with a soft bounce at the ends ---------- */
+  const area=document.querySelector('.deck-area');
+  let dragging=false, moved=false, downCard=null, dragStartX=0, panStart=0, lastX=0, lastT=0, vx=0, raf=null;
+  const VWpx=()=>window.innerWidth/100;
+  function setDragMode(on){ cards.forEach(el=>{ if(el!==curEl) el.style.transition=on?'none':''; }); }
+  function cancelInertia(){ if(raf){cancelAnimationFrame(raf);raf=null;} }
+  function bound(){ return (vis-1)/2*spacingFor(vis); }     /* |pan| limit */
+  function fanSpan(){ return (vis-1)*spacingFor(vis); }     /* total fan width in vw */
+  /* glide with inertia inside the bounds, then spring back if it overshoots an end */
+  function animatePan(){
+    cancelInertia();
+    (function tick(){
+      const h=bound();
+      if(pan>h+0.02 || pan<-h-0.02){              /* past an edge → spring back (bounce) */
+        const t = pan>0 ? h : -h;
+        vx = vx*0.55 + (t-pan)*0.16;
+        pan += vx;
+        layout();
+        if(Math.abs(pan-t)<0.25 && Math.abs(vx)<0.25){ pan=t; layout(); raf=null; setDragMode(false); return; }
+        raf=requestAnimationFrame(tick);
+      } else {                                     /* free glide, gently decaying */
+        if(Math.abs(vx)<0.03){ raf=null; setDragMode(false); return; }
+        pan += vx; vx*=0.92; layout(); raf=requestAnimationFrame(tick);
+      }
+    })();
+  }
+  area.addEventListener('pointerdown',e=>{
+    if(animating) return;
+    downCard=e.target.closest('.card'); moved=false;
+    if(!curEl && fanSpan()>96){                            /* drag only when the fan overflows the screen */
+      dragging=true; dragStartX=e.clientX; panStart=pan; lastX=e.clientX; lastT=performance.now(); vx=0;
+      cancelInertia(); setDragMode(true);
+      try{area.setPointerCapture(e.pointerId);}catch(_){}
+    }
+  });
+  area.addEventListener('pointermove',e=>{
+    if(!dragging) return;
+    const dx=e.clientX-dragStartX;
+    if(Math.abs(dx)>6) moved=true;
+    let target=panStart+dx/VWpx();
+    const h=bound();                                        /* rubber-band: resist past the ends */
+    if(target>h) target=h+(target-h)*0.35;
+    else if(target<-h) target=-h+(target+h)*0.35;
+    pan=target;
+    const now=performance.now(), dt=now-lastT;
+    if(dt>0) vx=((e.clientX-lastX)/VWpx())/dt*16;
+    lastX=e.clientX; lastT=now;
+    layout();
+  });
+  function endDrag(){
+    const wasDrag=dragging; dragging=false;
+    if(wasDrag){ if(moved) animatePan(); else setDragMode(false); }
+    if(!moved && downCard && !animating){
+      if(downCard===curEl) putBack();
+      else pullOut(downCard);
+    }
+    downCard=null;
+  }
+  area.addEventListener('pointerup',endDrag);
+  area.addEventListener('pointercancel',endDrag);
+
+  /* ---------- bottom icon buttons ---------- */
+  $('shuffle').onclick=()=>{ if(!animating) reshuffleDeck(); };
+  $('editPlayers').onclick=()=>{
+    const list=players.map(p=>({name:p.name,g:p.fem?'f':'m'}));
+    while(list.length<4) list.push({name:'',g:list.length%2?'m':'f'});
+    buildRows(list);
+    $('hint').classList.remove('show');
+    $('game').classList.remove('active'); $('setup').classList.add('active');
+  };
+</script>
+</body>
+</html>
