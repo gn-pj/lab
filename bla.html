@@ -565,17 +565,20 @@
     deck.classList.remove('frozen','presenting');
     deck.classList.add('piling');                 /* soften shadows while stacked */
     $('actions').classList.remove('show');
-    /* Phase 1 — everyone converges to a tight centre stack (no scaling) */
+    /* small per-card jitter so the centre pile never looks perfectly aligned */
+    const jit=cards.map(()=>'translate('+(Math.random()*12-6).toFixed(1)+'px,'+(Math.random()*12-6).toFixed(1)+'px) rotate('+(Math.random()*6-3).toFixed(2)+'deg)');
+    const cs=i=>'translate(-50%,-50%) '+jit[i];
+    /* Phase 1 — everyone converges to a loose centre stack (no scaling) */
     cards.forEach((el,i)=>{
       el.style.transition='transform .30s cubic-bezier(.55,0,.45,1), opacity .25s ease';
       el.style.zIndex=i;
-      el.style.transform='translate(-50%,-50%) rotate('+((i%2)?6:-6)+'deg)';
+      el.style.transform=cs(i);
       if(i>=vis) el.style.opacity='0';
     });
     setTimeout(()=>{
       paintCards(); computeVis(); setBacks();
-      /* snap all to the centre (no transition) so each one expands FROM the middle */
-      cards.forEach(el=>{ el.style.transition='none'; el.style.transform='translate(-50%,-50%)'; });
+      /* snap all to the centre (no transition) so each one expands FROM the middle, same jitter */
+      cards.forEach((el,i)=>{ el.style.transition='none'; el.style.transform=cs(i); });
       void deck.offsetWidth;
       /* Phase 2 — spread from the OUTER edges (nearest) inward to the centre (deepest) */
       const d=Math.min(0.05, 0.9/Math.max(vis,1)), c=(vis-1)/2;
