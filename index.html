@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Labo — gn</title>
+<meta name="description" content="Petit laboratoire d'expériences : jeux, quiz et autres objets jouables.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f3eee2;
+    --paper-2:#ece5d4;
+    --ink:#1c1a15;
+    --ink-soft:#5b5648;
+    --accent:#bb4d2e;
+    --line:#cdc4ad;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Fraunces",Georgia,serif;
+    line-height:1.5;
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+  }
+  /* paper grain */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:clamp(28px,7vw,64px) clamp(22px,6vw,40px) 80px;position:relative;z-index:2}
+
+  header{border-bottom:1.5px solid var(--ink);padding-bottom:22px;margin-bottom:8px}
+  .kicker{
+    font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--ink-soft);display:flex;justify-content:space-between;
+    align-items:baseline;gap:12px;margin-bottom:26px;
+    opacity:0;animation:rise .7s .05s forwards;
+  }
+  .kicker .dot{color:var(--accent)}
+  h1{
+    font-size:clamp(48px,15vw,104px);font-weight:900;line-height:.86;letter-spacing:-.02em;
+    opacity:0;animation:rise .8s .12s forwards;
+  }
+  h1 em{font-style:italic;font-weight:500;color:var(--accent)}
+  .tag{
+    font-size:clamp(15px,4vw,18px);color:var(--ink-soft);max-width:34ch;margin-top:18px;
+    opacity:0;animation:rise .8s .22s forwards;
+  }
+
+  .meta{
+    font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--ink-soft);
+    text-transform:uppercase;margin:30px 0 10px;display:flex;align-items:center;gap:12px;
+    opacity:0;animation:rise .8s .32s forwards;
+  }
+  .meta::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  ul.list{list-style:none}
+  .item{
+    border-bottom:1px solid var(--line);
+    padding:22px 4px;display:block;text-decoration:none;color:inherit;
+    display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:baseline;
+    transition:padding-left .25s ease,background .25s ease;
+    opacity:0;animation:rise .7s forwards;
+  }
+  .item:hover{padding-left:14px;background:var(--paper-2)}
+  .item .num{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--accent);padding-top:4px}
+  .item .ti{font-size:clamp(20px,5.5vw,26px);font-weight:600;line-height:1.15}
+  .item .ti small{display:block;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:400;
+    letter-spacing:.06em;color:var(--ink-soft);text-transform:uppercase;margin-top:6px}
+  .item .go{font-size:22px;color:var(--ink-soft);transition:transform .25s ease,color .25s ease}
+  .item:hover .go{transform:translateX(5px);color:var(--accent)}
+
+  .empty{
+    border:1.5px dashed var(--line);border-radius:3px;padding:38px 28px;text-align:center;
+    color:var(--ink-soft);margin-top:6px;
+    opacity:0;animation:rise .8s .4s forwards;
+  }
+  .empty .big{font-style:italic;font-size:22px;color:var(--ink);margin-bottom:8px}
+  .empty .small{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.05em}
+
+  footer{
+    margin-top:54px;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-soft);display:flex;justify-content:space-between;gap:12px;
+    opacity:0;animation:rise .9s .5s forwards;
+  }
+
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;opacity:1!important}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="kicker"><span>Laboratoire <span class="dot">●</span> objets jouables</span><span id="count"></span></div>
+      <h1>Le&nbsp;<em>labo</em></h1>
+      <p class="tag">Un coin pour bricoler des jeux, des quiz et de petites curiosités. On entre, on essaie, on repart.</p>
+    </header>
+
+    <div class="meta">Index</div>
+    <ul class="list" id="list"></ul>
+
+    <footer>
+      <span>gn-pj.github.io/lab</span>
+      <span id="year"></span>
+    </footer>
+  </div>
+
+<script>
+  // === Manifeste des expériences ===
+  // Pour ajouter un objet : { titre, sous, fichier }
+  const experiments = [
+    // exemple à venir : { titre:"Quiz cinéma", sous:"10 questions · 3 min", fichier:"quiz-cinema.html" }
+  ];
+
+  const list = document.getElementById('list');
+  const count = document.getElementById('count');
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  if(experiments.length === 0){
+    list.innerHTML = `<div class="empty">
+      <div class="big">Rien encore… mais ça vient.</div>
+      <div class="small">Premier objet en préparation</div>
+    </div>`;
+    count.textContent = "00 objet";
+  } else {
+    count.textContent = String(experiments.length).padStart(2,'0') + (experiments.length>1?" objets":" objet");
+    experiments.forEach((e,i)=>{
+      const a = document.createElement('a');
+      a.className='item';
+      a.href=e.fichier;
+      a.style.animationDelay=(0.4 + i*0.07)+'s';
+      a.innerHTML = `<span class="num">${String(i+1).padStart(2,'0')}</span>
+        <span class="ti">${e.titre}<small>${e.sous||''}</small></span>
+        <span class="go">→</span>`;
+      list.appendChild(a);
+    });
+  }
+</script>
+</body>
+</html>
