@@ -41,7 +41,7 @@
   .brand{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;letter-spacing:-.02em;}
 
   /* ---------- SETUP ---------- */
-  #setup{align-items:center;justify-content:center;padding:24px;}
+  #setup{align-items:center;justify-content:safe center;padding:24px;overflow-y:auto;}
   #setup .brand{font-size:46px;margin-bottom:4px;}
   .sub{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:28px;}
   .rows{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;}
@@ -55,6 +55,12 @@
     font-size:13px;padding:9px 12px;border-radius:11px;cursor:pointer;transition:.2s;}
   .g.on[data-g="f"]{background:linear-gradient(135deg,#ff5fb0,#ff4d6d);color:#fff;}
   .g.on[data-g="m"]{background:linear-gradient(135deg,#36b7f5,#5a6bff);color:#fff;}
+  .rm{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,.08);
+    color:rgba(255,255,255,.55);font-size:13px;cursor:pointer;transition:.2s;line-height:1;}
+  .rm:hover{background:rgba(255,80,110,.32);color:#fff;}
+  .addp{margin-top:14px;background:transparent;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.82);
+    font-family:"Archivo";font-weight:600;font-size:14px;border-radius:12px;padding:9px 18px;cursor:pointer;transition:.2s;}
+  .addp:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.08);}
   .cta{margin-top:30px;border:none;cursor:pointer;font-family:"Bricolage Grotesque";font-weight:700;font-size:17px;
     color:#1b1a3a;background:#fff;padding:16px 46px;border-radius:40px;transition:.2s;
     box-shadow:0 12px 34px rgba(0,0,0,.28);}
@@ -151,8 +157,9 @@
   <section id="setup" class="screen active">
     <button id="reset" class="reset-x" title="Oublier les prénoms" aria-label="Réinitialiser les prénoms">✕</button>
     <div class="brand">Bla</div>
-    <div class="sub">Quatre joueur·euses. Une carte à la fois.</div>
+    <div class="sub">Deux joueurs ou plus. Une carte à la fois.</div>
     <div id="rows" class="rows"></div>
+    <button id="addp" class="addp" type="button">+ Ajouter un joueur</button>
     <div id="hint" class="hint"></div>
     <button id="start" class="cta">Jouer</button>
   </section>
@@ -285,21 +292,33 @@
   }
 
   const rowsEl=$('rows');
-  function buildRows(list){
-    rowsEl.innerHTML='';
-    list.forEach(p=>{
-      const row=document.createElement('div'); row.className='row';
-      row.innerHTML='<input class="name" maxlength="18" placeholder="Prénom" autocomplete="off" autocapitalize="words">'+
-        '<div class="gw"><button class="g" data-g="f">elle</button><button class="g" data-g="m">il</button></div>';
-      const input=row.querySelector('.name'); input.value=p.name||'';
-      let manual=false;
-      const setG=g=>row.querySelectorAll('.g').forEach(x=>x.classList.toggle('on',x.dataset.g===g));
-      setG(p.g);
-      input.addEventListener('input',()=>{ if(manual) return; const g=detect(input.value); if(g) setG(g); });
-      row.querySelectorAll('.g').forEach(b=>{ b.onclick=()=>{manual=true;setG(b.dataset.g);}; });
-      rowsEl.appendChild(row);
-    });
+  const MAXP=8;
+  function makeRow(p){
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML='<input class="name" maxlength="18" placeholder="Prénom" autocomplete="off" autocapitalize="words">'+
+      '<div class="gw"><button class="g" data-g="f">elle</button><button class="g" data-g="m">il</button></div>'+
+      '<button class="rm" type="button" title="Retirer" aria-label="Retirer ce joueur">✕</button>';
+    const input=row.querySelector('.name'); input.value=p.name||'';
+    let manual=false;
+    const setG=g=>row.querySelectorAll('.g').forEach(x=>x.classList.toggle('on',x.dataset.g===g));
+    setG(p.g);
+    input.addEventListener('input',()=>{ if(manual) return; const g=detect(input.value); if(g) setG(g); });
+    row.querySelectorAll('.g').forEach(b=>{ b.onclick=()=>{manual=true;setG(b.dataset.g);}; });
+    row.querySelector('.rm').onclick=()=>{ row.remove(); refreshRows(); };
+    return row;
   }
+  function refreshRows(){
+    const rows=rowsEl.querySelectorAll('.row');
+    rows.forEach(r=>{ r.querySelector('.rm').style.visibility = rows.length>2 ? 'visible' : 'hidden'; });
+    $('addp').style.display = rows.length>=MAXP ? 'none' : '';
+  }
+  function buildRows(list){ rowsEl.innerHTML=''; list.forEach(p=>rowsEl.appendChild(makeRow(p))); refreshRows(); }
+  function addRow(){
+    const n=rowsEl.querySelectorAll('.row').length; if(n>=MAXP) return;
+    const r=makeRow({name:'',g:n%2?'m':'f'}); rowsEl.appendChild(r); refreshRows();
+    r.querySelector('.name').focus();
+  }
+  $('addp').onclick=addRow;
   let players=[];
 
   /* ---- remember names between games ---- */
@@ -310,7 +329,7 @@
     return null;
   }
   function saveNames(list){ try{ localStorage.setItem(LS, JSON.stringify(list)); }catch(e){} }
-  function padded(list){ list=list.slice(0,4); while(list.length<4) list.push({name:'',g:list.length%2?'m':'f'}); return list; }
+  function padded(list){ list=list.slice(); while(list.length<2) list.push({name:'',g:list.length%2?'m':'f'}); return list; }
 
   buildRows(padded(loadSaved()||DEFAULTS.map(d=>({...d}))));
 
@@ -623,7 +642,7 @@
   $('shuffle').onclick=()=>{ if(!animating) shuffleByCenter(); };
   $('editPlayers').onclick=()=>{
     const list=players.map(p=>({name:p.name,g:p.fem?'f':'m'}));
-    while(list.length<4) list.push({name:'',g:list.length%2?'m':'f'});
+    while(list.length<2) list.push({name:'',g:list.length%2?'m':'f'});
     buildRows(list);
     $('hint').classList.remove('show');
     $('game').classList.remove('active'); $('setup').classList.add('active');
