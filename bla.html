@@ -407,7 +407,7 @@
   function computeVis(){
     const pl=players[curPlayer];
     let r = pl._q ? (pl._q.length-pl._qp) : ALL.length;
-    if(r<=0){ pl._q=shuffledIdx(); pl._qp=0; r=ALL.length; }   /* pile épuisée → on rebrasse */
+    if(r<=0){ pl._q=buildPile(); pl._qp=0; r=ALL.length; }   /* pile épuisée → on rebrasse (même amorce douce) */
     vis=Math.max(1, Math.min(r, N));
   }
 
@@ -429,8 +429,15 @@
   }
 
   /* each player keeps their own shuffled pile → never the same question twice (until all 36 seen) */
-  function shuffledIdx(){ const a=ALL.map((_,i)=>i); for(let i=a.length-1;i>0;i--){const j=rand(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; }
-  function nextQ(p){ const pl=players[p]; if(!pl._q||pl._qp>=pl._q.length){ pl._q=shuffledIdx(); pl._qp=0; } return ALL[pl._q[pl._qp++]]; }
+  function shuf(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=rand(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; }
+  /* eased start per person: 2 questions from série 1, then 3 from série 2, then a true shuffle of the rest */
+  function buildPile(){
+    const ofS=s=>ALL.map((q,i)=>q.serie===s?i:-1).filter(i=>i>=0);
+    const head=shuf(ofS(1)).slice(0,2).concat(shuf(ofS(2)).slice(0,3));
+    const used=new Set(head);
+    return head.concat(shuf(ALL.map((_,i)=>i).filter(i=>!used.has(i))));
+  }
+  function nextQ(p){ const pl=players[p]; if(!pl._q||pl._qp>=pl._q.length){ pl._q=buildPile(); pl._qp=0; } return ALL[pl._q[pl._qp++]]; }
 
   /* the deck "belongs" to whoever's turn it is → their name on every back */
   function setBacks(){ const nm=players[curPlayer]?players[curPlayer].name:''; cards.forEach(el=>{ const b=el.querySelector('.bk'); if(b) b.textContent=nm; }); }
