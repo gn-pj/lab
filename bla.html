@@ -509,22 +509,54 @@
     }else{ reveal(); }
   }
 
-  /* the open card slides back into the deck */
-  function putBack(reshuffle){
+  /* the open card slides back into the deck — same player, pile just shrank by one */
+  function putBack(){
     if(!curEl) return;
     curEl.classList.remove('out','flipped'); curEl=null;
     deck.classList.remove('frozen','presenting');
     $('actions').classList.remove('show');
     pan=0; cancelInertia();
-    if(reshuffle) paintCards();       /* nouveau tas à chaque changement de joueur */
     showPrompt();
     applyVis();
-    setBacks();
     animating=true; setTimeout(()=>animating=false,420);
   }
 
-  $('again').onclick=()=>{ if(animating) return; putBack(false); };                                   /* même joueur : on garde le tas */
-  $('next').onclick=()=>{ if(animating) return; curPlayer=(curPlayer+1)%players.length; putBack(true); }; /* joueur suivant : nouveau tas + prénom */
+  /* visual shuffle THROUGH THE CENTRE: cards gather inward, then spread back out */
+  function shuffleByCenter(){
+    animating=true; cancelInertia(); pan=0;
+    if(curEl){ curEl.classList.remove('out','flipped'); curEl=null; }
+    deck.classList.remove('frozen','presenting');
+    $('actions').classList.remove('show');
+    /* Phase 1 — everyone converges to a tight centre stack */
+    cards.forEach((el,i)=>{
+      el.style.transition='transform .30s cubic-bezier(.55,0,.45,1), opacity .25s ease';
+      el.style.zIndex=i;
+      el.style.transform='translate(-50%,-50%) scale(.64) rotate('+((i%2)?7:-7)+'deg)';
+      if(i>=vis) el.style.opacity='0';
+    });
+    setTimeout(()=>{
+      paintCards(); computeVis(); setBacks();
+      /* snap all to the centre (no transition) so each one expands FROM the middle */
+      cards.forEach(el=>{ el.style.transition='none'; el.style.transform='translate(-50%,-50%) scale(.64)'; });
+      void deck.offsetWidth;
+      /* Phase 2 — spread out from the centre, staggered */
+      const d=Math.min(0.04, 0.8/Math.max(vis,1));
+      cards.forEach((el,i)=>{
+        if(i<vis){
+          el.style.transition='transform .55s cubic-bezier(.2,.85,.25,1) '+(i*d).toFixed(3)+'s, opacity .4s ease '+(i*d).toFixed(3)+'s';
+          const p=poseOf(i); el.style.transform=p.t; el.style.zIndex=p.z; el.style.opacity=''; el.style.pointerEvents='';
+        } else {
+          el.style.transition='opacity .3s ease';
+          el.style.opacity='0'; el.style.pointerEvents='none';
+        }
+      });
+      showPrompt();
+      setTimeout(()=>{ cards.forEach(el=>{el.style.transition='';}); animating=false; }, 700+vis*d*1000);
+    }, 320);
+  }
+
+  $('again').onclick=()=>{ if(animating) return; putBack(); };                                   /* même joueur : on garde le tas */
+  $('next').onclick=()=>{ if(animating) return; curPlayer=(curPlayer+1)%players.length; shuffleByCenter(); }; /* joueur suivant : brassage par le centre */
 
   /* ---------- finite left/right drag, with a soft bounce at the ends ---------- */
   const area=document.querySelector('.deck-area');
@@ -588,7 +620,7 @@
   area.addEventListener('pointercancel',endDrag);
 
   /* ---------- bottom icon buttons ---------- */
-  $('shuffle').onclick=()=>{ if(!animating) reshuffleDeck(); };
+  $('shuffle').onclick=()=>{ if(!animating) shuffleByCenter(); };
   $('editPlayers').onclick=()=>{
     const list=players.map(p=>({name:p.name,g:p.fem?'f':'m'}));
     while(list.length<4) list.push({name:'',g:list.length%2?'m':'f'});
