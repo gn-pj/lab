@@ -101,8 +101,9 @@
 
   .face{position:absolute;inset:0;border-radius:22px;overflow:hidden;
     backface-visibility:hidden;-webkit-backface-visibility:hidden;
-    box-shadow:0 16px 34px rgba(0,0,0,.34);}
-  .card.out .face{box-shadow:0 34px 70px rgba(0,0,0,.5);}
+    box-shadow:0 10px 24px rgba(0,0,0,.22);transition:box-shadow .3s ease;}
+  .card.out .face{box-shadow:0 30px 64px rgba(0,0,0,.46);}
+  .deck.piling .face{box-shadow:0 5px 13px rgba(0,0,0,.15);}   /* cards stacked → keep the pile from going dark */
   .back{display:flex;align-items:flex-end;padding:18px;}
   .back .bk{position:relative;font-family:"Bricolage Grotesque";font-weight:800;font-size:18.9px;color:rgba(255,255,255,.95);letter-spacing:-.01em;max-width:calc(100% - 12px);line-height:1.02;overflow-wrap:anywhere;}
   .back .pip{position:absolute;top:16px;right:18px;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.55);}
@@ -540,24 +541,26 @@
     animating=true; setTimeout(()=>animating=false,420);
   }
 
-  /* visual shuffle THROUGH THE CENTRE: cards gather inward, then spread back out */
+  /* visual shuffle THROUGH THE CENTRE: cards gather inward (full size), then spread back out */
   function shuffleByCenter(){
     animating=true; cancelInertia(); pan=0;
     if(curEl){ curEl.classList.remove('out','flipped'); curEl=null; }
     deck.classList.remove('frozen','presenting');
+    deck.classList.add('piling');                 /* soften shadows while stacked */
     $('actions').classList.remove('show');
-    /* Phase 1 — everyone converges to a tight centre stack */
+    /* Phase 1 — everyone converges to a tight centre stack (no scaling) */
     cards.forEach((el,i)=>{
       el.style.transition='transform .30s cubic-bezier(.55,0,.45,1), opacity .25s ease';
       el.style.zIndex=i;
-      el.style.transform='translate(-50%,-50%) scale(.64) rotate('+((i%2)?7:-7)+'deg)';
+      el.style.transform='translate(-50%,-50%) rotate('+((i%2)?6:-6)+'deg)';
       if(i>=vis) el.style.opacity='0';
     });
     setTimeout(()=>{
       paintCards(); computeVis(); setBacks();
       /* snap all to the centre (no transition) so each one expands FROM the middle */
-      cards.forEach(el=>{ el.style.transition='none'; el.style.transform='translate(-50%,-50%) scale(.64)'; });
+      cards.forEach(el=>{ el.style.transition='none'; el.style.transform='translate(-50%,-50%)'; });
       void deck.offsetWidth;
+      deck.classList.remove('piling');            /* restore normal shadows as they fan out */
       /* Phase 2 — spread out from the centre, staggered */
       const d=Math.min(0.04, 0.8/Math.max(vis,1));
       cards.forEach((el,i)=>{
