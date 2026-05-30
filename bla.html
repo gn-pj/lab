@@ -104,9 +104,9 @@
 
   .face{position:absolute;inset:0;border-radius:22px;overflow:hidden;
     backface-visibility:hidden;-webkit-backface-visibility:hidden;
-    box-shadow:0 10px 24px rgba(0,0,0,.22);transition:box-shadow .3s ease;}
+    box-shadow:0 6px 15px rgba(0,0,0,.16);transition:box-shadow .35s ease;}
   .card.out .face{box-shadow:0 30px 64px rgba(0,0,0,.46);}
-  .deck.piling .face{box-shadow:0 5px 13px rgba(0,0,0,.15);}   /* cards stacked → keep the pile from going dark */
+  .deck.piling .face{box-shadow:none;}   /* cards stacked at one point → no shadow, never goes dark */
   .back{display:flex;align-items:flex-end;padding:18px;}
   .back .bk{position:relative;font-family:"Bricolage Grotesque";font-weight:800;font-size:18.9px;color:rgba(255,255,255,.95);letter-spacing:-.01em;max-width:calc(100% - 12px);line-height:1.02;overflow-wrap:anywhere;}
   .back .pip{position:absolute;top:16px;right:18px;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.55);}
@@ -565,12 +565,13 @@
       /* snap all to the centre (no transition) so each one expands FROM the middle */
       cards.forEach(el=>{ el.style.transition='none'; el.style.transform='translate(-50%,-50%)'; });
       void deck.offsetWidth;
-      deck.classList.remove('piling');            /* restore normal shadows as they fan out */
-      /* Phase 2 — spread out from the centre, staggered */
-      const d=Math.min(0.04, 0.8/Math.max(vis,1));
+      /* Phase 2 — spread out from the centre toward BOTH sides at once (delay by distance from centre) */
+      const d=Math.min(0.05, 0.9/Math.max(vis,1)), c=(vis-1)/2;
+      let maxDelay=0;
       cards.forEach((el,i)=>{
         if(i<vis){
-          el.style.transition='transform .55s cubic-bezier(.2,.85,.25,1) '+(i*d).toFixed(3)+'s, opacity .4s ease '+(i*d).toFixed(3)+'s';
+          const delay=Math.abs(i-c)*d; if(delay>maxDelay) maxDelay=delay;
+          el.style.transition='transform .55s cubic-bezier(.2,.85,.25,1) '+delay.toFixed(3)+'s, opacity .4s ease '+delay.toFixed(3)+'s';
           const p=poseOf(i); el.style.transform=p.t; el.style.zIndex=p.z; el.style.opacity=''; el.style.pointerEvents='';
         } else {
           el.style.transition='opacity .3s ease';
@@ -578,7 +579,11 @@
         }
       });
       showPrompt();
-      setTimeout(()=>{ cards.forEach(el=>{el.style.transition='';}); animating=false; }, 700+vis*d*1000);
+      setTimeout(()=>{
+        cards.forEach(el=>{el.style.transition='';});
+        deck.classList.remove('piling');          /* shadows ease back in once cards are spread (no dark pile) */
+        animating=false;
+      }, 650+maxDelay*1000);
     }, 320);
   }
 
