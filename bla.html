@@ -264,17 +264,38 @@
                3:"linear-gradient(135deg,var(--s3a),var(--s3b))"};
   /* each back = a motif layered over a colour gradient */
   const W=a=>"rgba(255,255,255,"+a+")";
-  const CARDS=[
-    {g:"linear-gradient(150deg,#ff8a4c,#ff4d6d)", p:"radial-gradient(circle, "+W(.28)+" 2px, transparent 2.6px) 0 0/16px 16px"},
-    {g:"linear-gradient(150deg,#36b7f5,#5a6bff)", p:"repeating-linear-gradient(45deg, "+W(.16)+" 0 9px, transparent 9px 18px)"},
-    {g:"linear-gradient(150deg,#b162ff,#ff5fb0)", p:"repeating-radial-gradient(circle at 30% 18%, "+W(.18)+" 0 1.5px, transparent 1.5px 15px)"},
-    {g:"linear-gradient(150deg,#22c55e,#0ea5a3)", p:"linear-gradient("+W(.14)+" 1px, transparent 1px) 0 0/100% 20px, linear-gradient(90deg, "+W(.14)+" 1px, transparent 1px) 0 0/20px 100%"},
-    {g:"linear-gradient(150deg,#f59e0b,#ef4444)", p:"repeating-linear-gradient(135deg, "+W(.16)+" 0 7px, transparent 7px 14px), repeating-linear-gradient(45deg, "+W(.10)+" 0 7px, transparent 7px 14px)"},
-    {g:"linear-gradient(150deg,#0ea5e9,#22d3ee)", p:"radial-gradient(circle at 50% 120%, "+W(.20)+" 0 8px, transparent 9px) 0 0/30px 30px"},
-    {g:"linear-gradient(150deg,#8b5cf6,#6366f1)", p:"repeating-linear-gradient(90deg, "+W(.15)+" 0 2px, transparent 2px 13px)"},
-    {g:"linear-gradient(150deg,#ec4899,#f43f5e)", p:"radial-gradient("+W(.22)+" 1.6px, transparent 1.7px) 0 0/14px 14px, radial-gradient("+W(.22)+" 1.6px, transparent 1.7px) 7px 7px/14px 14px"},
-    {g:"linear-gradient(150deg,#14b8a6,#3b82f6)", p:"repeating-linear-gradient(0deg, "+W(.12)+" 0 8px, transparent 8px 16px), repeating-linear-gradient(90deg, "+W(.12)+" 0 8px, transparent 8px 16px)"}
+  /* ---- motif library (white overlays, same graphic spirit) ---- */
+  const dots  =(a,r,t)=>`radial-gradient(circle, ${W(a)} ${r}px, transparent ${(r+0.6)}px) 0 0/${t}px ${t}px`;
+  const dots2 =(a,r,t)=>`radial-gradient(${W(a)} ${r}px, transparent ${(r+0.7)}px) 0 0/${t}px ${t}px, radial-gradient(${W(a)} ${r}px, transparent ${(r+0.7)}px) ${t/2}px ${t/2}px/${t}px ${t}px`;
+  const stripe=(a,ang,l,g)=>`repeating-linear-gradient(${ang}deg, ${W(a)} 0 ${l}px, transparent ${l}px ${g}px)`;
+  const grid  =(a,t,l)=>`linear-gradient(${W(a)} ${l}px, transparent ${l}px) 0 0/100% ${t}px, linear-gradient(90deg, ${W(a)} ${l}px, transparent ${l}px) 0 0/${t}px 100%`;
+  const cross =(a,l,g)=>`repeating-linear-gradient(135deg, ${W(a)} 0 ${l}px, transparent ${l}px ${g}px), repeating-linear-gradient(45deg, ${W(a)} 0 ${l}px, transparent ${l}px ${g}px)`;
+  const conc  =(a,t)=>`repeating-radial-gradient(circle at 50% 16%, ${W(a)} 0 1.5px, transparent 1.5px ${t}px)`;
+  const scallop=(a,t)=>`radial-gradient(circle at 50% 130%, ${W(a)} 0 ${(t*0.28).toFixed(1)}px, transparent ${(t*0.31).toFixed(1)}px) 0 0/${t}px ${t}px`;
+  const plaid =(a,t)=>`repeating-linear-gradient(0deg, ${W(a)} 0 2px, transparent 2px ${t}px), repeating-linear-gradient(90deg, ${W(a)} 0 2px, transparent 2px ${t}px)`;
+  const G=(a,b)=>`linear-gradient(150deg,${a},${b})`;
+  /* ---- colour families (one per player) ---- */
+  const wc =[G("#ff8a4c","#ff4d6d"),G("#ff6f91","#ff3d6e"),G("#ff7a59","#f5425f"),G("#fb6f8d","#e23e5c"),G("#ff9472","#ff5e8a")];
+  const bl =[G("#36b7f5","#5a6bff"),G("#4aa8ff","#5d5fef"),G("#2fb3f0","#4f7cff"),G("#5ec6ff","#6a6bff"),G("#3aa0f0","#6457ff")];
+  const gr =[G("#22c55e","#0ea5a3"),G("#34d39e","#0f9d7a"),G("#3fbf6f","#11a58c"),G("#2bd4a8","#1c9f6b"),G("#4cd07a","#0c9d9d")];
+  const pu =[G("#b162ff","#ff5fb0"),G("#a06bff","#d65cff"),G("#8b5cf6","#c45cf0"),G("#b07cff","#e35cc0"),G("#9a6bff","#ff6fce")];
+  const og =[G("#f59e0b","#ef4444"),G("#ffae3a","#ff6a3d"),G("#fbbf24","#f97316"),G("#ff9f1c","#ff5d4d"),G("#f5b042","#ef5a3a")];
+  const cy =[G("#0ea5e9","#22d3ee"),G("#22b8e6","#34e0d0"),G("#18a8e0","#2bd4ee"),G("#2cc4e6","#22e0c8"),G("#0fb5e0","#3ad6e6")];
+  const mg =[G("#ec4899","#f43f5e"),G("#f04fb0","#e8385f"),G("#ff5fae","#ff4d77"),G("#e84393","#f5426b"),G("#ff5bbf","#ff4d6d")];
+  const ind=[G("#8b5cf6","#6366f1"),G("#7c6bff","#5560f0"),G("#9a7cff","#5f6bff"),G("#7d6cf5","#4f57e8"),G("#8f7bff","#6457ff")];
+  const zip=(cols,pats)=>cols.map((g,i)=>({g, p:pats[i]}));
+  /* ---- one identifiable set per player (colour family + motif family) ---- */
+  const PSETS=[
+    zip(wc,  [dots(.26,2,15), dots2(.22,1.5,13), dots(.2,3,22), conc(.16,16), scallop(.2,30)]),        /* corail · pois ronds */
+    zip(bl,  [stripe(.16,45,9,18), stripe(.15,90,2,13), stripe(.13,0,2,16), stripe(.16,135,7,16), stripe(.12,45,3,11)]), /* bleu · rayures */
+    zip(gr,  [grid(.14,20,1), cross(.12,1,12), grid(.12,14,1), cross(.12,7,14), grid(.1,26,1.4)]),     /* vert · grille */
+    zip(pu,  [conc(.18,15), scallop(.2,30), conc(.14,11), scallop(.16,22), conc(.16,20)]),             /* violet · cercles */
+    zip(og,  [plaid(.14,16), plaid(.11,22), cross(.14,5,12), grid(.13,18,2), plaid(.16,12)]),          /* orange · damier */
+    zip(cy,  [scallop(.2,28), scallop(.16,20), dots(.18,2,16), scallop(.18,34), conc(.16,16)]),        /* cyan · écailles */
+    zip(mg,  [dots2(.22,1.6,12), dots(.2,2.4,18), stripe(.13,45,2,10), dots2(.18,1.3,10), dots(.16,3,24)]), /* magenta · confettis */
+    zip(ind, [cross(.13,2,11), stripe(.15,45,5,14), grid(.12,18,1), stripe(.14,135,5,14), cross(.11,1,9)])  /* indigo · tissage */
   ];
+  const CARDS=PSETS[0];   /* default for the initial closed deck (repainted per player immediately) */
 
   const $=id=>document.getElementById(id);
   const rand=n=>Math.floor(Math.random()*n);
@@ -442,11 +463,12 @@
   /* the deck "belongs" to whoever's turn it is → their name on every back */
   function setBacks(){ const nm=players[curPlayer]?players[curPlayer].name:''; cards.forEach(el=>{ const b=el.querySelector('.bk'); if(b) b.textContent=nm; }); }
 
-  /* redistribute colours + patterns; never two identical side by side (linear: any prefix stays valid) */
+  /* redistribute the CURRENT PLAYER'S set; never two identical side by side (linear: any prefix stays valid) */
   function paintCards(){
+    const SET=PSETS[curPlayer%PSETS.length];
     const conflict=(a,b)=> a.g===b.g||a.p===b.p;
     const n=cards.length;
-    let pool=cards.map((_,i)=>CARDS[i%CARDS.length]);
+    let pool=cards.map((_,i)=>SET[i%SET.length]);
     const valid=p=>{ for(let i=1;i<n;i++){ if(conflict(p[i],p[i-1])) return false; } return true; };
     let ok=false;
     for(let a=0;a<300&&!ok;a++){ for(let i=n-1;i>0;i--){const j=rand(i+1);[pool[i],pool[j]]=[pool[j],pool[i]];} ok=valid(pool); }
