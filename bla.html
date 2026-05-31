@@ -84,7 +84,8 @@
     color:rgba(255,255,255,.55);font-size:13px;cursor:pointer;transition:.2s;line-height:1;}
   .rm:hover{background:rgba(255,80,110,.32);color:#fff;}
   .row.dragging{opacity:.4;}
-  .row.drop .name{box-shadow:0 0 0 2px rgba(255,255,255,.85);border-color:transparent;}
+  .row.drop{background:rgba(255,255,255,.10);border-radius:16px;}
+  .row.drop .name{box-shadow:0 0 0 2px #fff;border-color:transparent;}
   .row.linked .name{box-shadow:0 0 0 2px var(--cc,#8b5cf6);border-color:transparent;}
   .lghost{position:fixed;z-index:9999;pointer-events:none;padding:13px 16px;border-radius:16px;background:#fff;color:#1b1a3a;font-family:"Bricolage Grotesque";font-weight:800;font-size:15px;box-shadow:0 14px 36px rgba(0,0,0,.45);transform:translate(-50%,-50%);max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   body.linking #setup{overflow:hidden;}
@@ -197,7 +198,7 @@
 </style>
 </head>
 <body>
-<div class="ver">v7 · couples</div>
+<div class="ver">v8 · couples</div>
 <div class="blob a"></div><div class="blob b"></div>
 <div id="app">
 
@@ -643,7 +644,7 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
   const COUPLE_COLORS=['#8b5cf6','#14b8a6','#f59e0b','#84cc16'];
   function unlinkRow(r){ const o=r&&r._link; [r,o].forEach(x=>{ if(!x) return; x._link=null; x.classList.remove('linked'); x.style.removeProperty('--cc'); delete x.dataset.cc; }); updateLinkHint(); }
   function linkRows(a,b){ if(!a||!b||a===b) return; if(a._link===b){ unlinkRow(a); return; } unlinkRow(a); unlinkRow(b); const used=new Set([...rowsEl.querySelectorAll('.row.linked')].map(r=>r.dataset.cc)); const color=COUPLE_COLORS.find(c=>!used.has(c))||COUPLE_COLORS[0]; a._link=b; b._link=a; [a,b].forEach(r=>{ r.classList.add('linked'); r.style.setProperty('--cc',color); r.dataset.cc=color; }); updateLinkHint(); }
-  function rowUnder(x,y,exclude){ const els=document.elementsFromPoint(x,y); for(const el of els){ const r=el.closest?el.closest('.row'):null; if(r&&r!==exclude&&rowsEl.contains(r)) return r; } let hit=null; rowsEl.querySelectorAll('.row').forEach(r=>{ if(r===exclude) return; const b=r.getBoundingClientRect(); if(x>=b.left&&x<=b.right&&y>=b.top&&y<=b.bottom) hit=r; }); return hit; }
+  function rowUnder(x,y,exclude){ let best=null,bestD=Infinity,h=44; rowsEl.querySelectorAll('.row').forEach(r=>{ if(r===exclude) return; const b=r.getBoundingClientRect(); h=b.height; const cy=b.top+b.height/2; const d=Math.abs(cy-y); if(d<bestD){bestD=d;best=r;} }); return bestD<=h*1.6 ? best : null; }
   function updateLinkHint(){ const n=rowsEl.querySelectorAll('.row.linked').length/2; const h=document.querySelector('.linkhint'); if(!h) return; h.textContent = n>=1 ? (n+' couple'+(n>1?'s':'')+' formé'+(n>1?'s':'')+' · glisse pour en lier d’autres') : 'Glisse un prénom sur un autre pour former un couple'; }
   function onRowDown(row,e){ if(e.target.closest('.gw')||e.target.closest('.rm')) return; const sx=e.clientX,sy=e.clientY,pid=e.pointerId; let drag=false,ghost=null; try{ row.setPointerCapture(pid); }catch(_){}
     const begin=()=>{ if(drag)return; drag=true; row.classList.add('dragging'); document.body.classList.add('linking'); const inp=row.querySelector('.name'); if(inp)inp.blur(); ghost=document.createElement('div'); ghost.className='lghost'; ghost.style.width=row.getBoundingClientRect().width+'px'; ghost.textContent='🔗 '+(row.querySelector('.name').value.trim()||'ce joueur'); document.body.appendChild(ghost); if(navigator.vibrate)navigator.vibrate(12); };
