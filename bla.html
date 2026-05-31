@@ -82,6 +82,11 @@
   .rm{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,.08);
     color:rgba(255,255,255,.55);font-size:13px;cursor:pointer;transition:.2s;line-height:1;}
   .rm:hover{background:rgba(255,80,110,.32);color:#fff;}
+  .row.dragging{opacity:.4;}
+  .row.drop .name{box-shadow:0 0 0 2px rgba(255,255,255,.85);border-color:transparent;}
+  .row.linked .name{box-shadow:0 0 0 2px var(--cc,#8b5cf6);border-color:transparent;}
+  .lghost{position:fixed;z-index:9999;pointer-events:none;padding:13px 16px;border-radius:16px;background:#fff;color:#1b1a3a;font-family:"Bricolage Grotesque";font-weight:800;font-size:15px;box-shadow:0 14px 36px rgba(0,0,0,.45);transform:translate(-50%,-50%);max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  body.linking #setup{touch-action:none;overflow:hidden;}
   .addp{margin-top:14px;background:transparent;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.82);
     font-family:"Archivo";font-weight:600;font-size:14px;border-radius:12px;padding:9px 18px;cursor:pointer;transition:.2s;}
   .addp:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.08);}
@@ -382,10 +387,12 @@
 
   /* ===== réserves élargies (piochées 12/niveau par partie) ===== */
   ;(function(){var MORE={connaitre:{1:["Quel objet du quotidien ne pourrais-tu absolument pas remplacer ?","Si on tournait un documentaire sur ta vie, quel en serait le titre ?","Quelle est la plus petite chose qui te rend démesurément heureux ou heureuse ?","Quel talent inutile mais bien réel possèdes-tu ?","Quelle habitude as-tu prise récemment et comptes-tu garder ?","Quel endroit, sur cette planète, voudrais-tu voir au moins une fois ?","Quelle chanson connais-tu par cœur sans l’avoir jamais apprise exprès ?","Si ta semaine avait une couleur, ce serait laquelle, et pourquoi ?","Qu’est-ce qui te fait rire à tous les coups, même quand tu résistes ?","Quel métier rêvais-tu de faire à dix ans ?","Quel plat te ramène directement en enfance ?","Quelle est la dernière chose qui t’a sincèrement étonné ?","Si tu pouvais parler une langue d’un claquement de doigts, laquelle ?","Quel film ou quelle série pourrais-tu revoir sans jamais t’en lasser ?","Quelle saison te ressemble le plus ?","Quel petit luxe t’accordes-tu sans culpabiliser ?"],2:["Qu’est-ce que tu admires le plus chez tes parents ?","Quelle peur as-tu fini par dépasser, et comment ?","Qu’est-ce qui te fait sentir vraiment vivant ?","Quelle décision a le plus changé le cours de ta vie ?","De quoi as-tu le plus peur de passer à côté dans la vie ?","Quel conseil donnerais-tu à la personne que tu étais il y a dix ans ?","Quand t’es-tu senti le plus fier de toi ?","Qu’est-ce que les gens comprennent souvent de travers à ton sujet ?","Qu’est-ce qui te console quand plus rien ne va ?","Quelle qualité aimerais-tu développer davantage ?","Quel échec t’a finalement le plus appris ?","À quel moment as-tu senti que tu devenais adulte ?","Quelle relation, dans ta vie, mériterait que tu y tiennes davantage ?","Que ferais-tu si tu savais que tu ne peux pas échouer ?","Quelle est la chose la plus courageuse que tu aies faite ?","Qu’est-ce qui te rend immédiatement reconnaissant quand tu y penses ?"],3:["Dis à {P} ce qui t’a le plus surpris chez {p:lui|elle} ce soir.","Quelle phrase aimerais-tu entendre, là, maintenant ?","Qu’est-ce que tu n’as jamais osé demander à personne ?","Complète : « Ce dont j’ai le plus besoin et que je demande rarement, c’est… »","Quel pardon, donné ou reçu, t’a le plus libéré ?","Quand t’es-tu senti vraiment compris pour la dernière fois ?","Qu’est-ce que tu aimerais qu’on retienne de toi ?","Dis à {P} en quoi {p:il|elle} pourrait devenir quelqu’un d’important pour toi.","Quelle vérité sur toi ne confies-tu qu’à très peu de gens ?","Quel moment de cette année aimerais-tu pouvoir revivre ?","Nomme une chose que tu as peur d’avouer mais qui te ferait du bien à dire.","Quelle blessure ancienne te touche-t-elle encore aujourd’hui ?","Qu’est-ce que tu remets sans cesse à demain alors que ça compte vraiment ?","Regarde {P} et dis-lui une chose sincère, sans plaisanter.","Quel rêve gardes-tu si secret que tu te l’avoues à peine ?","Termine : « Si je me faisais davantage confiance, je… »"]},seduire:{1:["Ton style de flirt : direct, taquin ou tout en sous-entendus ?","Quel trait d’humour te fait fondre ?","Qu’est-ce qui te donne envie de revoir quelqu’un ?","Quel lieu trouves-tu le plus propice à une rencontre ?","Quelle est ta plus belle qualité quand tu veux plaire ?","Un regard ou un sourire : qu’est-ce qui te fait le plus d’effet ?","Quel petit geste d’attention te séduit immédiatement ?","Quel serait le meilleur tout premier message à t’envoyer ?","Qu’est-ce qui te rend curieux de quelqu’un ?","Comment sais-tu que le courant passe avec quelqu’un ?","Quel compliment fais-tu quand tu veux vraiment charmer ?","Quelle ambiance te met d’humeur à séduire ?","Décris la personne qui retient ton attention dans une soirée.","Quelle est ta façon préférée de briser la glace ?","Qu’est-ce qui rend une voix séduisante, selon toi ?","Quel détail, chez toi, fait toujours son petit effet ?"],2:["Qu’est-ce qui t’attire chez quelqu’un avant même qu’il parle ?","Quelle assurance, chez l’autre, te trouble le plus ?","Raconte la dernière fois que quelqu’un t’a fait de l’effet sans le savoir.","Quel genre d’audace te plaît chez l’autre ?","Qu’est-ce qui te fait passer du « sympa » au « j’ai très envie de le revoir » ?","Quelle qualité rend quelqu’un irrésistible à tes yeux ?","Qu’est-ce qui te séduit dans une conversation ?","Comment réagis-tu quand tu sens qu’on te désire ?","À quel moment te dis-tu : « là, je craque » ?","Quelle est la chose la plus attirante qu’on puisse faire tout habillé ?","Qu’est-ce qui te donne envie de te rapprocher de quelqu’un ?","Quelle attention te fait sentir vraiment choisi ?","Qu’est-ce qui, chez l’autre, te fait perdre le fil de tes idées ?","Quel signe ne trompe jamais, chez toi, quand quelqu’un te plaît ?","Qu’est-ce qui rend une personne magnétique, pour toi ?","Décris l’effet que te fait quelqu’un qui te plaît vraiment."],3:["Y a-t-il quelqu’un, ici ou ailleurs, à qui tu penses en ce moment ?","Quel aveu te brûle les lèvres depuis un moment ?","Avoue la dernière fois que tu as fait mine de rien alors que ça te plaisait.","Quelle est la chose la plus romantique que tu n’as jamais osé faire ?","À qui devrais-tu déclarer quelque chose, sans jamais l’avoir fait ?","Quel geste attends-tu secrètement de quelqu’un ?","Termine : « Si je n’avais pas peur du ridicule, je te dirais que… »","Quel sentiment caches-tu mieux que tu ne le voudrais ?","Si tu pouvais embrasser quelqu’un, là, sans aucune conséquence, qui serait-ce ?","Quel souvenir amoureux refuses-tu d’oublier ?","De quel signe aurais-tu besoin pour enfin oser ?","Avoue un coup de cœur que personne ici ne soupçonne.","Quelle phrase te ferait dire oui sur-le-champ ?","Termine : « Ce que je n’avoue jamais en premier, c’est… »","Qu’est-ce qui te retient encore d’aimer comme tu le voudrais ?","Quelle est la déclaration la plus sincère que tu gardes sur le cœur ?"]},chauffer:{1:["Ton baiser préféré : tendre, joueur ou affamé ?","Quelle partie du corps de l’autre attire ton regard en premier ?","Quel vêtement, sur quelqu’un, te fait littéralement craquer ?","Quel est le compliment le plus osé que tu aimerais recevoir ?","Quelle est ta zone la plus sensible, celle qu’on devine rarement ?","Quel parfum ou quelle odeur te fait tourner la tête ?","Slow collé ou regard à distance : qu’est-ce qui te chauffe le plus ?","Quel détail anodin trouves-tu terriblement sexy ?","Quelle est ta façon préférée qu’on te prenne la main ?","Quel surnom te ferait rougir si on te le murmurait ?","Quel est le geste le plus séduisant qu’on puisse faire à table ?","Qu’est-ce qui te fait frissonner sans même qu’on te touche ?","Quel est le message le plus audacieux que tu aies envoyé… ou voulu envoyer ?","Mordiller, embrasser, chuchoter : ton premier choix dans le cou ?","Quelle scène de film t’a marqué par sa tension ?","Quelle texture aimes-tu sentir contre ta peau ?"],2:["Quelle est la chose la plus audacieuse que tu aies tentée pour séduire ?","Quel fantasme encore sage oserais-tu décrire ici ?","Quel lieu inattendu te paraît terriblement excitant ?","Qu’est-ce qui te fait perdre patience quand le désir monte ?","Quelle phrase, soufflée à l’oreille, te désarmerait complètement ?","Quelle est la limite que tu aimes qu’on approche sans la franchir trop vite ?","Qu’est-ce qui transforme une soirée ordinaire en soirée électrique ?","Quel jeu de regards as-tu déjà joué jusqu’au bout ?","Qu’est-ce que tu trouves le plus excitant dans l’attente ?","Quelle audace aimerais-tu qu’on ait avec toi ?","Quel est le rapprochement le plus mémorable que tu gardes pour toi ?","Qu’est-ce qui, ce soir, te ferait dire « on continue ailleurs » ?","Quel signe envoies-tu quand tu veux qu’on se rapproche ?","Quelle tension préfères-tu : la lente ou l’évidente ?","Qu’est-ce qui te rend audacieux quand d’habitude tu ne l’es pas ?","Quelle est la chose la plus sexy à faire en restant parfaitement habillé ?"],3:["Avoue le désir le moins sage que cette soirée t’a inspiré.","Décris, sans te censurer, le tout premier geste si tout était permis.","Quel fantasme assumerais-tu enfin à voix haute, ce soir ?","Quelle est la chose la plus osée que tu aimerais qu’on ose avec toi ?","Qu’est-ce que tu chuchoterais à la personne qui te fait le plus d’effet ici ?","Quel est ton meilleur atout, une fois la porte fermée ?","Si la nuit n’avait aucune règle, par quoi commencerais-tu ?","Quelle est la pensée la plus brûlante que tu caches depuis tout à l’heure ?","Quel aveu coquin n’as-tu jamais fait à voix haute ?","Qu’est-ce qui te fait perdre complètement le contrôle ?","Quel scénario rejoues-tu dans ta tête plus souvent que tu ne l’admets ?","Quelle invitation, ce soir, ne saurais-tu pas refuser ?","Termine : « Ce que je rêverais vraiment qu’on me fasse, c’est… »","Quel est le souvenir le plus torride que tu oses presque raconter ?","Qu’est-ce que tu aimerais tenter et n’as jamais osé demander ?","Termine, sans réfléchir : « Si je t’attirais dans un coin, je… »"]}};for(var k in MORE){for(var s=1;s<=3;s++){DECKS[k].sets[s]=DECKS[k].sets[s].concat(MORE[k][s]);}}})();
+  ;(function(){var X={"seduire": {"2": ["Quel compliment ferais-tu à {P} pour {p:le|la} faire rougir ?", "Qu'est-ce qui, chez {P}, te donne envie de te rapprocher ?"], "3": ["Avoue à {P} la première pensée que tu as eue en {p:le|la} voyant ce soir.", "Dis à {P} ce qui, chez {p:lui|elle}, retient ton regard.", "Regarde {P} dans les yeux dix secondes, sans dire un mot.", "Avoue à {P} l'effet qu'{p:il|elle} te fait vraiment.", "Quelle est la première chose que tu remarques quand {P} entre dans une pièce ?"]}, "chauffer": {"1": ["Quel surnom donnerais-tu à {P} pour ce soir seulement ?", "Quel détail chez {P} attire ton regard en premier, là, maintenant ?", "Sur dix, quel effet {P} te fait-{p:il|elle} ce soir ?"], "2": ["Choisis un endroit sur {P} où tu aimerais déposer un baiser, et dis lequel.", "Quel geste oserais-tu faire à {P} si la lumière était tamisée ?", "Dis à {P} le compliment le plus osé que tu retiens depuis tout à l'heure.", "Que ferais-tu à {P} si vous aviez la maison pour vous deux dix minutes ?", "Dis à {P} où tu aimerais qu'{p:il|elle} pose ses mains.", "Quelle est la chose la plus osée que tu murmurerais à {P} ?"], "3": ["Que ferais-tu à {P} dans une voiture, vitres embuées, là, maintenant ?", "Chuchote à {P} la chose la plus brûlante que tu aies en tête.", "Décris à {P} le tout premier geste si plus aucune règle ne tenait.", "Regarde {P} et avoue ce dont tu as envie, sans détour.", "Si {P} t'attirait dans un coin, par quoi commencerais-tu ?", "Quel est le geste interdit que tu meurs d'envie de faire à {P} ?", "Montre à {P}, sans un mot, ce dont tu as envie.", "Si {P} et toi disparaissiez maintenant, où iriez-vous et pour quoi faire ?"]}};for(var k in X){for(var s in X[k]){DECKS[k].sets[s]=DECKS[k].sets[s].concat(X[k][s]);}}})();
   const ROMAN={1:"I",2:"II",3:"III"};
   let SETS=DECKS.connaitre.sets;
   let ALL=[];
-  function buildALL(){ ALL=[]; let c=0; const PER=12; for(const s of [1,2,3]){ const pool=SETS[s].map((_,i)=>i); for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=pool[i];pool[i]=pool[j];pool[j]=t;} pool.slice(0,PER).forEach(idx=>{c++;ALL.push({serie:s,idx,n:c});}); } }
+  function buildALL(){ ALL=[]; let c=0; const PER=12; const IX=/\{P\}|\{deP\}|\{p:/; const sh=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;};
+    for(const s of [1,2,3]){ const inter=sh(SETS[s].map((_,i)=>i).filter(i=>IX.test(SETS[s][i]))); const norm=sh(SETS[s].map((_,i)=>i).filter(i=>!IX.test(SETS[s][i]))); const want=Math.min(inter.length, Math.ceil(PER*0.55)); let pick=inter.slice(0,want).concat(norm); pick=pick.concat(inter.slice(want)).slice(0,PER); sh(pick); pick.forEach(idx=>{c++;ALL.push({serie:s,idx,n:c});}); } }
   buildALL();
   function selectDeck(k){ if(!DECKS[k]) return; SETS=DECKS[k].sets; buildALL(); }
 
@@ -625,6 +632,17 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
 
   const rowsEl=$('rows');
   const MAXP=8;
+  const COUPLE_COLORS=['#8b5cf6','#14b8a6','#f59e0b','#84cc16'];
+  function unlinkRow(r){ const o=r&&r._link; [r,o].forEach(x=>{ if(!x) return; x._link=null; x.classList.remove('linked'); x.style.removeProperty('--cc'); delete x.dataset.cc; }); }
+  function linkRows(a,b){ if(!a||!b||a===b) return; if(a._link===b){ unlinkRow(a); return; } unlinkRow(a); unlinkRow(b); const used=new Set([...rowsEl.querySelectorAll('.row.linked')].map(r=>r.dataset.cc)); const color=COUPLE_COLORS.find(c=>!used.has(c))||COUPLE_COLORS[0]; a._link=b; b._link=a; [a,b].forEach(r=>{ r.classList.add('linked'); r.style.setProperty('--cc',color); r.dataset.cc=color; }); }
+  function rowUnder(x,y,exclude){ const els=document.elementsFromPoint(x,y); for(const el of els){ const r=el.closest?el.closest('.row'):null; if(r&&r!==exclude&&rowsEl.contains(r)) return r; } return null; }
+  function onRowDown(row,e){ if(e.target.closest('.gw')||e.target.closest('.rm')) return; const sx=e.clientX,sy=e.clientY; let drag=false,ghost=null;
+    const begin=()=>{ drag=true; row.classList.add('dragging'); document.body.classList.add('linking'); const inp=row.querySelector('.name'); if(inp) inp.blur(); ghost=document.createElement('div'); ghost.className='lghost'; ghost.style.width=row.getBoundingClientRect().width+'px'; ghost.textContent='🔗 '+(row.querySelector('.name').value.trim()||'ce joueur'); document.body.appendChild(ghost); ghost.style.left=sx+'px'; ghost.style.top=sy+'px'; if(navigator.vibrate)navigator.vibrate(12); };
+    let timer=setTimeout(begin,240);
+    const stop=()=>{ clearTimeout(timer); document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up); document.removeEventListener('pointercancel',up); };
+    const move=ev=>{ if(!drag){ if(Math.hypot(ev.clientX-sx,ev.clientY-sy)>10){ stop(); } return; } ev.preventDefault(); ghost.style.left=ev.clientX+'px'; ghost.style.top=ev.clientY+'px'; const tg=rowUnder(ev.clientX,ev.clientY,row); rowsEl.querySelectorAll('.row').forEach(r=>r.classList.toggle('drop',r===tg)); };
+    const up=ev=>{ const wasDrag=drag; stop(); if(!wasDrag) return; row.classList.remove('dragging'); document.body.classList.remove('linking'); if(ghost)ghost.remove(); const tg=rowUnder(ev.clientX,ev.clientY,row); rowsEl.querySelectorAll('.row').forEach(r=>r.classList.remove('drop')); if(tg) linkRows(row,tg); else unlinkRow(row); };
+    document.addEventListener('pointermove',move); document.addEventListener('pointerup',up); document.addEventListener('pointercancel',up); }
   function makeRow(p){
     const row=document.createElement('div'); row.className='row';
     row.innerHTML='<input class="name" maxlength="18" placeholder="Prénom" autocomplete="off" autocapitalize="words">'+
@@ -634,9 +652,10 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
     let manual=false;
     const setG=g=>row.querySelectorAll('.g').forEach(x=>x.classList.toggle('on',x.dataset.g===g));
     setG(p.g);
-    input.addEventListener('input',()=>{ if(manual) return; const g=detect(input.value); if(g) setG(g); });
+    input.addEventListener('input',()=>{ if(!manual){ const g=detect(input.value); if(g) setG(g); } });
     row.querySelectorAll('.g').forEach(b=>{ b.onclick=()=>{manual=true;setG(b.dataset.g);}; });
-    row.querySelector('.rm').onclick=()=>{ row.remove(); refreshRows(); };
+    row.querySelector('.rm').onclick=()=>{ unlinkRow(row); row.remove(); refreshRows(); };
+    row.addEventListener('pointerdown', e=>onRowDown(row,e));
     return row;
   }
   function refreshRows(){
@@ -691,12 +710,12 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
       startGame();
       return;
     }
-    const list=[...rowsEl.querySelectorAll('.row')].map(r=>({
-      name:r.querySelector('.name').value.trim(),
-      fem:r.querySelector('.g.on').dataset.g==='f'
-    })).filter(p=>p.name);
-    if(list.length<2){ $('hint').textContent='Il faut au moins deux prénoms.'; $('hint').classList.add('show'); return; }
-    players=list; $('hint').classList.remove('show');
+    const rowEls=[...rowsEl.querySelectorAll('.row')];
+    const valid=rowEls.map(r=>({r,name:r.querySelector('.name').value.trim(),fem:r.querySelector('.g.on').dataset.g==='f'})).filter(x=>x.name);
+    if(valid.length<2){ $('hint').textContent='Il faut au moins deux prénoms.'; $('hint').classList.add('show'); return; }
+    const idxOf=new Map(); valid.forEach((x,i)=>idxOf.set(x.r,i));
+    players=valid.map(x=>({ name:x.name, fem:x.fem, link:(x.r._link&&idxOf.has(x.r._link))?idxOf.get(x.r._link):null }));
+    $('hint').classList.remove('show');
     saveNames(players.map(p=>({name:p.name,g:p.fem?'f':'m'})));
     $('setup').classList.remove('active');
     $('game').classList.add('active');
@@ -843,12 +862,14 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
       q.appendChild(s); if(k<arr.length-1) q.appendChild(document.createTextNode(' '));
     });
   }
+  function lcFirst(s){ const m=s.match(/^(\s*[«"'(]?)([A-Za-zÀ-ÿ])([\s\S]*)$/); return m ? m[1]+m[2].toLowerCase()+m[3] : s; }
   function fill(el,person,q,partner){
     el.querySelector('.fhead').style.background=el.dataset.bg;   /* recto = couleur + motif de CETTE carte */
     el.querySelector('.fserie').textContent='Niveau '+q.serie;
     el.querySelector('.fname').textContent=person.name;
     el.querySelector('.ffoot').textContent='Question '+q.n+' / 36';
-    const txt=resolve(SETS[q.serie][q.idx], person.fem, partner);
+    let txt=resolve(SETS[q.serie][q.idx], person.fem, partner);
+    if(person.name) txt = person.name + ', ' + lcFirst(txt);
     renderQ(el, txt);
     setupTimer(el, detectDuration(txt));
   }
@@ -913,7 +934,7 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
     const qid=el._qid;                              /* question figée de CETTE carte */
     const q=ALL[qid], raw=SETS[q.serie][q.idx];
     let partner=null;
-    if(/\{P\}|\{deP\}|\{p:/.test(raw) && players.length>1){ partner=players[(curPlayer+1)%players.length]; }  /* la personne dont c'est le tour juste après */
+    if(/\{P\}|\{deP\}|\{p:/.test(raw) && players.length>1){ let li=(person.link!=null && person.link!==curPlayer)?person.link:((curPlayer+1)%players.length); partner=players[li]; }  /* couple lié (jamais soi-même), sinon joueur suivant */
     const reveal=()=>{
       fill(el,person,q,partner);
       el.classList.add('out','flipped');
