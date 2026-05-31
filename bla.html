@@ -349,11 +349,22 @@
   const $=id=>document.getElementById(id);
   const rand=n=>Math.floor(Math.random()*n);
   function resolve(text, fem, partner){
-    const noP = (typeof groupMode!=='undefined' && groupMode) ? "quelqu'un" : "l'autre";
-    const deP = partner ? (/^[aeiouhéèàâêîï]/i.test(partner.name) ? "d'"+partner.name : "de "+partner.name) : ((typeof groupMode!=='undefined' && groupMode) ? "de quelqu'un" : "de l'autre");
-    text=text.replace(/\{deP\}/g, deP).replace(/\{P\}/g, partner?partner.name:noP);
+    const group = (typeof groupMode!=='undefined' && groupMode);
+    let pick=null;
+    if(group && !partner){                       /* cible figée par question : droite / gauche / quelqu'un de ton choix */
+      const opts=[
+        {p:'la personne à ta droite', de:'de la personne à ta droite'},
+        {p:'la personne à ta gauche', de:'de la personne à ta gauche'},
+        {p:"quelqu'un de ton choix",  de:"de quelqu'un de ton choix"}
+      ];
+      let h=0; for(let i=0;i<text.length;i++) h=(h+text.charCodeAt(i))%3;
+      pick=opts[h];
+    }
+    const noP = partner ? partner.name : (group ? pick.p : "l'autre");
+    const deP = partner ? (/^[aeiouhéèàâêîï]/i.test(partner.name) ? "d'"+partner.name : "de "+partner.name) : (group ? pick.de : "de l'autre");
+    text=text.replace(/\{deP\}/g, deP).replace(/\{P\}/g, noP);
     return text.replace(/\{(p:)?([^|}]+)\|([^}]+)\}/g,(_,p,a,b)=>{
-      const useFem = p ? (partner?partner.fem:false) : fem;
+      const useFem = p ? (partner ? partner.fem : (group ? true : false)) : fem;  /* en groupe, on accorde avec « la personne » → elle */
       return useFem ? b : a;
     });
   }
@@ -690,7 +701,7 @@
     curEl.classList.remove('out','flipped'); curEl=null;
     deck.classList.remove('frozen','presenting');
     $('actions').classList.remove('show');
-    pan=0; cancelInertia();
+    cancelInertia();                      /* on reste là où on est : pas de recentrage */
     showPrompt();
     applyVis();
     animating=true; setTimeout(()=>animating=false,420);
