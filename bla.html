@@ -777,18 +777,19 @@ var CHAUF_PAL=[GR('#ff5c3c','#ff2e63'),GR('#ff7a3d','#ff3d5e'),GR('#ff4d3d','#c8
   /* pose le deck UNE SEULE FOIS : chaque carte reçoit sa question + son motif (couleur + trame) définitifs */
   /* pool de motifs réutilisé → le navigateur ne rastérise qu'une poignée d'images au lieu de 36 (perf changement de joueur) */
   var _motifPool={};
-  function motifPool(key){ if(_motifPool[key]) return _motifPool[key]; const N=12, arr=[]; for(let i=0;i<N;i++){ arr.push(key==='seduire'?skinMotif(i*131+7):chaufferMotif(i*131+7)); } _motifPool[key]=arr; return arr; }
+  function motifPool(key){ if(_motifPool[key]) return _motifPool[key]; const bank=key==='seduire'?SKINS:CHAUF; const arr=bank.map((f,i)=>svURL(200,280,f(200,280,oRng(i*131+7)))); _motifPool[key]=arr; return arr; }
+  /* suite equilibree d'indices : chaque entree ~meme nombre de fois, melangee, sans repetition adjacente */
+  function balancedSeq(poolLen,count){ if(poolLen<=1) return new Array(count).fill(0); const seq=[]; for(let i=0;i<count;i++) seq.push(i%poolLen); for(let i=seq.length-1;i>0;i--){const j=rand(i+1);const tmp=seq[i];seq[i]=seq[j];seq[j]=tmp;} for(let i=1;i<seq.length;i++){ if(seq[i]===seq[i-1]){ for(let k=i+1;k<seq.length;k++){ if(seq[k]!==seq[i]&&seq[k]!==seq[i-1]){ const tmp=seq[i];seq[i]=seq[k];seq[k]=tmp; break; } } } } return seq; }
   function dealDeck(){
-    buildALL();                              /* nouvelle pige de 36 questions (12/niveau) à chaque partie */
+    buildALL();
     const order=buildPile();
-    let lastC=-1, lastP=-1, lastM=-1;
-    const pool=(deckKey==='seduire'||deckKey==='chauffer')?motifPool(deckKey):null;
-    const PAL=deckKey==='seduire'?SEDU_PAL:(deckKey==='chauffer'?CHAUF_PAL:null);
+    let motifs, PAL;
+    if(deckKey==='seduire'||deckKey==='chauffer'){ motifs=motifPool(deckKey); PAL=deckKey==='seduire'?SEDU_PAL:CHAUF_PAL; }
+    else { motifs=PAT_URLS; PAL=PALETTE; }
+    const mSeq=balancedSeq(motifs.length, cards.length), cSeq=balancedSeq(PAL.length, cards.length);
     cards.forEach((el,i)=>{
       el._qid=order[i]; el._dead=false;
-      let bg;
-      if(pool){ let m; do{m=rand(pool.length);}while(pool.length>1&&m===lastM); lastM=m; let c; do{c=rand(PAL.length);}while(PAL.length>1&&c===lastC); lastC=c; bg=pool[m]+', '+PAL[c]; }
-      else { let c; do{c=rand(PALETTE.length);}while(PALETTE.length>1&&c===lastC); lastC=c; let p; do{p=rand(PAT_URLS.length);}while(PAT_URLS.length>1&&p===lastP); lastP=p; bg=PAT_URLS[p]+', '+PALETTE[c]; }
+      const bg=motifs[mSeq[i]]+', '+PAL[cSeq[i]];
       el.dataset.bg=bg; const art=el.querySelector('.bkart'); if(art) art.style.background=bg;
     });
     dealt=true;
