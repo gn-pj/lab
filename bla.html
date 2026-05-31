@@ -70,7 +70,7 @@
   .modes .mode.on{background:#fff;color:#1c1a15;}
   .groupnote{display:none;color:rgba(255,255,255,.82);font-size:15px;max-width:30ch;margin:2px auto 6px;text-align:center;line-height:1.5;}
   .rows{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;}
-  .row{display:flex;gap:10px;align-items:stretch;}
+  .row{display:flex;gap:10px;align-items:stretch;touch-action:none;}
   .name{flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);
     border-radius:16px;padding:13px 16px;color:#fff;font-family:"Archivo";font-size:16px;font-weight:500;outline:none;transition:.2s;}
   .name::placeholder{color:rgba(255,255,255,.45);}
@@ -206,7 +206,7 @@
 </style>
 </head>
 <body>
-<div class="ver">v10 · couples</div>
+<div class="ver">v11 · couples</div>
 <div class="blob a"></div><div class="blob b"></div>
 <div id="app">
 
@@ -221,7 +221,6 @@
       <button type="button" class="mode" data-deck="chauffer">🥵 Chauffer</button>
     </div>
     <div id="rows" class="rows"></div>
-    <button id="linkbtn" class="linkbtn" type="button">🔗 Lier les couples</button>
     <div class="linkhint"></div>
     <div id="hint" class="hint"></div>
     <div class="cta-row">
@@ -656,9 +655,9 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
   function onPairTap(row){ if(row._link){ if(armedRow===row) armedRow=null; row.classList.remove('arm'); unlinkRow(row); return; } if(armedRow && armedRow!==row){ linkRows(armedRow,row); armedRow.classList.remove('arm'); armedRow=null; } else { if(armedRow) armedRow.classList.remove('arm'); armedRow=row; row.classList.add('arm'); updateLinkHint(); } }
   function unlinkRow(r){ const o=r&&r._link; [r,o].forEach(x=>{ if(!x) return; x._link=null; x.classList.remove('linked'); x.style.removeProperty('--cc'); delete x.dataset.cc; }); updateLinkHint(); saveSetup(); }
   function linkRows(a,b){ if(!a||!b||a===b) return; if(a._link===b){ unlinkRow(a); return; } unlinkRow(a); unlinkRow(b); const used=new Set([...rowsEl.querySelectorAll('.row.linked')].map(r=>r.dataset.cc)); const color=COUPLE_COLORS.find(c=>!used.has(c))||COUPLE_COLORS[0]; a._link=b; b._link=a; [a,b].forEach(r=>{ r.classList.add('linked'); r.style.setProperty('--cc',color); r.dataset.cc=color; }); updateLinkHint(); saveSetup(); }
-  function rowUnder(x,y,exclude){ let best=null,bestD=Infinity,h=44; rowsEl.querySelectorAll('.row').forEach(r=>{ if(r===exclude) return; const b=r.getBoundingClientRect(); h=b.height; const cy=b.top+b.height/2; const d=Math.abs(cy-y); if(d<bestD){bestD=d;best=r;} }); return bestD<=h*1.6 ? best : null; }
+  function rowUnder(x,y,exclude){ const els=document.elementsFromPoint(x,y); for(const el of els){ const r=el.closest?el.closest('.row'):null; if(r&&r!==exclude&&rowsEl.contains(r)) return r; } let hit=null; rowsEl.querySelectorAll('.row').forEach(r=>{ if(r===exclude)return; const b=r.getBoundingClientRect(); if(x>=b.left&&x<=b.right&&y>=b.top&&y<=b.bottom) hit=r; }); return hit; }
   function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-  function updateLinkHint(){ const h=document.querySelector('.linkhint'); if(!h) return; const seen=new Set(); const pairs=[]; rowsEl.querySelectorAll('.row.linked').forEach(r=>{ if(seen.has(r)||!r._link) return; seen.add(r); seen.add(r._link); const a=r.querySelector('.name').value.trim()||'?'; const b=r._link.querySelector('.name').value.trim()||'?'; pairs.push({a,b,c:r.dataset.cc||'#8b5cf6'}); }); if(!pairs.length){ h.textContent = linkMode ? 'Touche deux prénoms pour les lier' : 'Astuce : « Lier les couples » pour des questions à deux'; return; } h.innerHTML='Couples : '+pairs.map(p=>'<span class="cpl"><span class="dot" style="background:'+p.c+'"></span>'+esc(p.a)+' &amp; '+esc(p.b)+'</span>').join('<span class="sep"> · </span>'); }
+  function updateLinkHint(){ const h=document.querySelector('.linkhint'); if(!h) return; const seen=new Set(); const pairs=[]; rowsEl.querySelectorAll('.row.linked').forEach(r=>{ if(seen.has(r)||!r._link) return; seen.add(r); seen.add(r._link); const a=r.querySelector('.name').value.trim()||'?'; const b=r._link.querySelector('.name').value.trim()||'?'; pairs.push({a,b,c:r.dataset.cc||'#8b5cf6'}); }); if(!pairs.length){ h.textContent = 'Glisse un prénom sur un autre pour former un couple'; return; } h.innerHTML='Couples : '+pairs.map(p=>'<span class="cpl"><span class="dot" style="background:'+p.c+'"></span>'+esc(p.a)+' &amp; '+esc(p.b)+'</span>').join('<span class="sep"> · </span>'); }
   function onRowDown(row,e){ if(e.target.closest('.gw')||e.target.closest('.rm')) return; const sx=e.clientX,sy=e.clientY,pid=e.pointerId; let drag=false,ghost=null; try{ row.setPointerCapture(pid); }catch(_){}
     const begin=()=>{ if(drag)return; drag=true; row.classList.add('dragging'); document.body.classList.add('linking'); const inp=row.querySelector('.name'); if(inp)inp.blur(); ghost=document.createElement('div'); ghost.className='lghost'; ghost.style.width=row.getBoundingClientRect().width+'px'; ghost.textContent='🔗 '+(row.querySelector('.name').value.trim()||'ce joueur'); document.body.appendChild(ghost); if(navigator.vibrate)navigator.vibrate(12); };
     const move=ev=>{ if(ev.pointerId!==pid) return; if(!drag){ if(Math.hypot(ev.clientX-sx,ev.clientY-sy)>8) begin(); else return; } ev.preventDefault(); ghost.style.left=ev.clientX+'px'; ghost.style.top=ev.clientY+'px'; const tg=rowUnder(ev.clientX,ev.clientY,row); rowsEl.querySelectorAll('.row').forEach(r=>r.classList.toggle('drop',r===tg)); };
@@ -677,7 +676,7 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
     input.addEventListener('change',()=>{ updateLinkHint(); saveSetup(); });
     row.querySelectorAll('.g').forEach(b=>{ b.onclick=()=>{manual=true;setG(b.dataset.g);saveSetup();}; });
     row.querySelector('.rm').onclick=()=>{ unlinkRow(row); row.remove(); refreshRows(); updateLinkHint(); saveSetup(); };
-    row.addEventListener('click', e=>{ if(!linkMode) return; if(e.target.closest('.gw')||e.target.closest('.rm')) return; e.preventDefault(); onPairTap(row); });
+    row.addEventListener('pointerdown', e=>onRowDown(row,e));
     return row;
   }
   function refreshRows(){
@@ -692,7 +691,6 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
     r.querySelector('.name').focus();
   }
   $('addp').onclick=addRow;
-  $('linkbtn').onclick=()=>setLinkMode(!linkMode);
   let players=[];
   let groupMode=false;
   let deckKey='connaitre';
@@ -739,6 +737,7 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
     if(valid.length<2){ $('hint').textContent='Il faut au moins deux prénoms.'; $('hint').classList.add('show'); return; }
     const idxOf=new Map(); valid.forEach((x,i)=>idxOf.set(x.r,i));
     players=valid.map(x=>({ name:x.name, fem:x.fem, link:(x.r._link&&idxOf.has(x.r._link))?idxOf.get(x.r._link):null }));
+    players.forEach(p=>{ p.mate = (p.link!=null && players[p.link]) ? players[p.link] : null; });  /* reference directe -> survit au melange de l'ordre du tour */
     $('hint').classList.remove('show');
     saveSetup();
     $('setup').classList.remove('active');
@@ -956,11 +955,11 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
     if(animating || !el) return; animating=true;
     const person=players[curPlayer];
     const qid=el._qid;                              /* question figée de CETTE carte */
-    const hasMoitie=(person.link!=null && person.link!==curPlayer && players.length>1);
+    const hasMoitie=(person.mate && players.length>1);
     if(el._chosenIdx==null){ el._chosenIdx=pickQuestion(ALL[qid].serie, hasMoitie); }
     const q={serie:ALL[qid].serie, idx:el._chosenIdx, n:ALL[qid].n};
     const raw=SETS[q.serie][q.idx];
-    let partner = (IX.test(raw) && hasMoitie) ? players[person.link] : null;  /* couple: uniquement la moitié */
+    let partner = (IX.test(raw) && hasMoitie) ? person.mate : null;  /* couple: la moitié, par reference */
     const reveal=()=>{
       fill(el,person,q,partner);
       el.classList.add('out','flipped');
