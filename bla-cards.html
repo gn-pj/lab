@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bla — dos Bicycle (Chauffer)</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"Archivo",sans-serif;color:#fff;background:#13070a;padding:26px 16px 70px;}
+  h1{font-family:"Bricolage Grotesque";font-weight:800;font-size:26px;letter-spacing:-.02em;margin-bottom:4px;}
+  .sub{color:rgba(255,255,255,.62);font-size:14px;margin-bottom:22px;max-width:62ch;line-height:1.5;}
+  .grid{display:flex;flex-wrap:wrap;gap:16px;}
+  .item{width:150px;}
+  /* white playing-card border, baked structurally */
+  .card{width:150px;aspect-ratio:5/7;border-radius:14px;background:#fff;padding:7px;
+        box-shadow:0 12px 28px rgba(0,0,0,.5);}
+  .art{width:100%;height:100%;border-radius:9px;overflow:hidden;}
+  .lbl{font-size:11.5px;color:rgba(255,255,255,.62);margin-top:7px;text-align:center;}
+  @media(max-width:520px){.item,.card{width:43vw;}}
+</style></head>
+<body>
+  <h1>🥵 Chauffer — dos Bicycle</h1>
+  <p class="sub">Dos de carte ornementé : bordure blanche, fond diapré, cadre à perles, médaillon rayonnant, volutes en miroir. Plusieurs gammes — dis-moi laquelle tu veux (le jeu en piochera plusieurs au hasard).</p>
+  <div id="board" class="grid"></div>
+<script>
+function bicycleBack(field, ink, seed){
+  const W=250,H=350, CX=125, CY=175;
+  const r2=(n)=>Number(n).toFixed(1);
+  function quad(inner){ // 4-fold mirror around centre
+    return "<g transform='translate("+CX+" "+CY+")'>"
+      +"<g>"+inner+"</g><g transform='scale(-1,1)'>"+inner+"</g>"
+      +"<g transform='scale(1,-1)'>"+inner+"</g><g transform='scale(-1,-1)'>"+inner+"</g></g>";
+  }
+  // main filigree arm (one diagonal quadrant, centre-relative, +x +y)
+  const arm="<g fill='none' stroke='"+ink+"' stroke-width='1.5' stroke-linecap='round'>"
+    +"<path d='M16 12 C 58 20 96 58 104 116'/>"
+    +"<path d='M40 16 C 54 38 50 62 34 78'/>"
+    +"<path d='M34 78 C 26 88 15 84 14 74 C 24 78 28 69 22 62'/>"
+    +"</g>"
+    +"<path d='M104 116 C 120 118 126 104 117 95 C 133 100 131 126 106 128 Z' fill='"+ink+"' fill-opacity='0.88'/>"
+    +"<ellipse cx='68' cy='42' rx='6' ry='10.5' transform='rotate(42 68 42)' fill='"+ink+"' fill-opacity='0.82'/>"
+    +"<circle cx='90' cy='80' r='2.4' fill='"+ink+"'/>";
+  // central medallion
+  function medallion(){
+    const R=46; let s="<g transform='translate("+CX+" "+CY+")'>";
+    s+="<g fill='none' stroke='"+ink+"' stroke-width='1.3'><circle r='"+R+"'/><circle r='"+r2(R*0.9)+"'/><circle r='"+r2(R*0.4)+"'/></g>";
+    let rays="<g fill='none' stroke='"+ink+"' stroke-width='0.9'>";const N=44;
+    for(let i=0;i<N;i++){const a=i/N*6.2832;rays+="<line x1='"+r2(Math.cos(a)*R*0.42)+"' y1='"+r2(Math.sin(a)*R*0.42)+"' x2='"+r2(Math.cos(a)*R*0.86)+"' y2='"+r2(Math.sin(a)*R*0.86)+"'/>";}
+    rays+="</g>";
+    let pet="<g fill='"+ink+"'>";const P=16;
+    for(let i=0;i<P;i++){const a=i/P*6.2832,x=Math.cos(a)*R*0.28,y=Math.sin(a)*R*0.28;pet+="<ellipse cx='"+r2(x)+"' cy='"+r2(y)+"' rx='2.1' ry='4.6' transform='rotate("+r2(a*57.3+90)+" "+r2(x)+" "+r2(y)+")'/>";}
+    pet+="<circle r='3.2'/></g>";
+    return s+rays+pet+"</g>";
+  }
+  // border frame + beads + corner fleurons
+  function frame(){
+    let s="<g fill='none' stroke='"+ink+"'>";
+    s+="<rect x='12' y='12' width='226' height='326' rx='12' stroke-width='1.6'/>";
+    s+="<rect x='18' y='18' width='214' height='314' rx='9' stroke-width='0.9'/>";
+    s+="</g>";
+    // beads along the 15px-inset rectangle
+    let bd="<g fill='"+ink+"'>";const bx=15,by=15,bw=220,bh=320,sp=11;
+    for(let x=bx+sp;x<bx+bw-sp/2;x+=sp){bd+="<circle cx='"+r2(x)+"' cy='"+by+"' r='1.5'/><circle cx='"+r2(x)+"' cy='"+(by+bh)+"' r='1.5'/>";}
+    for(let y=by+sp;y<by+bh-sp/2;y+=sp){bd+="<circle cx='"+bx+"' cy='"+r2(y)+"' r='1.5'/><circle cx='"+(bx+bw)+"' cy='"+r2(y)+"' r='1.5'/>";}
+    bd+="</g>";
+    // corner fleurons
+    const corners=[[24,24,1,1],[226,24,-1,1],[24,326,1,-1],[226,326,-1,-1]];
+    let fl="";
+    corners.forEach(c=>{fl+="<g transform='translate("+c[0]+" "+c[1]+") scale("+c[2]+" "+c[3]+")' fill='none' stroke='"+ink+"' stroke-width='1.2'><path d='M0 14 C 0 4 4 0 14 0'/><path d='M4 18 C 14 18 18 14 18 4'/><circle cx='9' cy='9' r='1.8' fill='"+ink+"'/></g>";});
+    return s+bd+fl;
+  }
+  // light diamond diaper ground, clipped inside frame
+  function ground(){
+    let g="<clipPath id='cl"+seed+"'><rect x='22' y='22' width='206' height='306' rx='7'/></clipPath>";
+    let l="<g clip-path='url(#cl"+seed+")' stroke='"+ink+"' stroke-opacity='0.22' stroke-width='0.6'>";
+    const sp=12;
+    for(let i=-H;i<W+H;i+=sp){l+="<line x1='"+i+"' y1='0' x2='"+(i+H)+"' y2='"+H+"'/><line x1='"+i+"' y1='0' x2='"+(i-H)+"' y2='"+H+"'/>";}
+    l+="</g>";
+    return g+l;
+  }
+  const inner="<rect width='"+W+"' height='"+H+"' fill='"+field+"'/>"+ground()+quad(arm)+medallion()+frame();
+  const svg="<svg xmlns='http://www.w3.org/2000/svg' width='"+W+"' height='"+H+"' viewBox='0 0 "+W+" "+H+"'>"+inner+"</svg>";
+  return "url(\"data:image/svg+xml,"+encodeURIComponent(svg)+"\") center/cover no-repeat";
+}
+  const WAYS=[
+    ["Rouge classique","#b3122e","#ffffff"],
+    ["Rouge ardent","#c8102e","#fff5f3"],
+    ["Braise (app)","#7a0f1e","#ffd9d0"],
+    ["Bordeaux & or","#5a0a14","#e8c07a"],
+    ["Bleu classique","#1f3f8f","#ffffff"],
+    ["Encre sur crème","#f4ece0","#a01228"]
+  ];
+  const board=document.getElementById('board');
+  WAYS.forEach((w,i)=>{
+    const it=document.createElement('div');it.className='item';
+    it.innerHTML="<div class='card'><div class='art'></div></div><div class='lbl'>"+w[0]+"</div>";
+    board.appendChild(it);
+    it.querySelector('.art').style.background=bicycleBack(w[1],w[2],i+1);
+  });
+</script></body></html>
