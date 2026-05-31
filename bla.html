@@ -86,7 +86,8 @@
   .row.drop .name{box-shadow:0 0 0 2px rgba(255,255,255,.85);border-color:transparent;}
   .row.linked .name{box-shadow:0 0 0 2px var(--cc,#8b5cf6);border-color:transparent;}
   .lghost{position:fixed;z-index:9999;pointer-events:none;padding:13px 16px;border-radius:16px;background:#fff;color:#1b1a3a;font-family:"Bricolage Grotesque";font-weight:800;font-size:15px;box-shadow:0 14px 36px rgba(0,0,0,.45);transform:translate(-50%,-50%);max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  body.linking #setup{touch-action:none;overflow:hidden;}
+  body.linking #setup{overflow:hidden;}
+  .linkhint{font-size:11.5px;color:rgba(255,255,255,.42);text-align:center;margin-top:9px;line-height:1.4;}
   .addp{margin-top:14px;background:transparent;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.82);
     font-family:"Archivo";font-weight:600;font-size:14px;border-radius:12px;padding:9px 18px;cursor:pointer;transition:.2s;}
   .addp:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.08);}
@@ -208,6 +209,7 @@
       <button type="button" class="mode" data-deck="chauffer">🥵 Chauffer</button>
     </div>
     <div id="rows" class="rows"></div>
+    <div class="linkhint">Glisse un prénom sur un autre pour former un couple 🔗</div>
     <div id="hint" class="hint"></div>
     <div class="cta-row">
       <button id="addp" class="addp" type="button" aria-label="Ajouter un joueur">+1</button>
@@ -391,8 +393,11 @@
   const ROMAN={1:"I",2:"II",3:"III"};
   let SETS=DECKS.connaitre.sets;
   let ALL=[];
-  function buildALL(){ ALL=[]; let c=0; const PER=12; const IX=/\{P\}|\{deP\}|\{p:/; const sh=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;};
-    for(const s of [1,2,3]){ const inter=sh(SETS[s].map((_,i)=>i).filter(i=>IX.test(SETS[s][i]))); const norm=sh(SETS[s].map((_,i)=>i).filter(i=>!IX.test(SETS[s][i]))); const want=Math.min(inter.length, Math.ceil(PER*0.55)); let pick=inter.slice(0,want).concat(norm); pick=pick.concat(inter.slice(want)).slice(0,PER); sh(pick); pick.forEach(idx=>{c++;ALL.push({serie:s,idx,n:c});}); } }
+  function buildALL(){ ALL=[]; let c=0; const PER=12; for(const s of [1,2,3]){ const pool=SETS[s].map((_,i)=>i); for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=pool[i];pool[i]=pool[j];pool[j]=t;} pool.slice(0,PER).forEach(idx=>{c++;ALL.push({serie:s,idx,n:c});}); } }
+  const IX=/\{P\}|\{deP\}|\{p:/;
+  let QUEUE={};
+  function buildQueues(){ const sh=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}; QUEUE={}; for(const s of [1,2,3]){ const all=SETS[s].map((_,i)=>i); QUEUE[s]={inter:sh(all.filter(i=>IX.test(SETS[s][i]))), norm:sh(all.filter(i=>!IX.test(SETS[s][i])))}; } }
+  function pickQuestion(serie, linked){ const Q=QUEUE[serie]; if(!Q){ buildQueues(); return pickQuestion(serie,linked); } const wantInter = linked && Q.inter.length && (Q.norm.length===0 || Math.random()<0.55); if(wantInter) return Q.inter.pop(); if(Q.norm.length) return Q.norm.pop(); if(Q.inter.length) return Q.inter.pop(); buildQueues(); return pickQuestion(serie,linked); }
   buildALL();
   function selectDeck(k){ if(!DECKS[k]) return; SETS=DECKS[k].sets; buildALL(); }
 
@@ -636,12 +641,11 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
   function unlinkRow(r){ const o=r&&r._link; [r,o].forEach(x=>{ if(!x) return; x._link=null; x.classList.remove('linked'); x.style.removeProperty('--cc'); delete x.dataset.cc; }); }
   function linkRows(a,b){ if(!a||!b||a===b) return; if(a._link===b){ unlinkRow(a); return; } unlinkRow(a); unlinkRow(b); const used=new Set([...rowsEl.querySelectorAll('.row.linked')].map(r=>r.dataset.cc)); const color=COUPLE_COLORS.find(c=>!used.has(c))||COUPLE_COLORS[0]; a._link=b; b._link=a; [a,b].forEach(r=>{ r.classList.add('linked'); r.style.setProperty('--cc',color); r.dataset.cc=color; }); }
   function rowUnder(x,y,exclude){ const els=document.elementsFromPoint(x,y); for(const el of els){ const r=el.closest?el.closest('.row'):null; if(r&&r!==exclude&&rowsEl.contains(r)) return r; } return null; }
-  function onRowDown(row,e){ if(e.target.closest('.gw')||e.target.closest('.rm')) return; const sx=e.clientX,sy=e.clientY; let drag=false,ghost=null;
+  function onRowDown(row,e){ if(e.target.closest('.gw')||e.target.closest('.rm')) return; const sx=e.clientX,sy=e.clientY,pid=e.pointerId; let drag=false,ghost=null; try{ row.setPointerCapture(pid); }catch(_){}
     const begin=()=>{ if(drag)return; drag=true; row.classList.add('dragging'); document.body.classList.add('linking'); const inp=row.querySelector('.name'); if(inp)inp.blur(); ghost=document.createElement('div'); ghost.className='lghost'; ghost.style.width=row.getBoundingClientRect().width+'px'; ghost.textContent='🔗 '+(row.querySelector('.name').value.trim()||'ce joueur'); document.body.appendChild(ghost); if(navigator.vibrate)navigator.vibrate(12); };
-    const stop=()=>{ document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up); document.removeEventListener('pointercancel',up); };
-    const move=ev=>{ if(!drag){ if(Math.hypot(ev.clientX-sx,ev.clientY-sy)>8) begin(); else return; } ev.preventDefault(); ghost.style.left=ev.clientX+'px'; ghost.style.top=ev.clientY+'px'; const tg=rowUnder(ev.clientX,ev.clientY,row); rowsEl.querySelectorAll('.row').forEach(r=>r.classList.toggle('drop',r===tg)); };
-    const up=ev=>{ const wasDrag=drag; stop(); if(!wasDrag) return; row.classList.remove('dragging'); document.body.classList.remove('linking'); if(ghost)ghost.remove(); const tg=rowUnder(ev.clientX,ev.clientY,row); rowsEl.querySelectorAll('.row').forEach(r=>r.classList.remove('drop')); if(tg) linkRows(row,tg); else unlinkRow(row); };
-    document.addEventListener('pointermove',move); document.addEventListener('pointerup',up); document.addEventListener('pointercancel',up); }
+    const move=ev=>{ if(ev.pointerId!==pid) return; if(!drag){ if(Math.hypot(ev.clientX-sx,ev.clientY-sy)>8) begin(); else return; } ev.preventDefault(); ghost.style.left=ev.clientX+'px'; ghost.style.top=ev.clientY+'px'; const tg=rowUnder(ev.clientX,ev.clientY,row); rowsEl.querySelectorAll('.row').forEach(r=>r.classList.toggle('drop',r===tg)); };
+    const end=ev=>{ if(ev.pointerId!==pid) return; row.removeEventListener('pointermove',move); row.removeEventListener('pointerup',end); row.removeEventListener('pointercancel',end); try{row.releasePointerCapture(pid);}catch(_){} if(!drag) return; row.classList.remove('dragging'); document.body.classList.remove('linking'); if(ghost)ghost.remove(); const tg=rowUnder(ev.clientX,ev.clientY,row); rowsEl.querySelectorAll('.row').forEach(r=>r.classList.remove('drop')); if(tg) linkRows(row,tg); else unlinkRow(row); };
+    row.addEventListener('pointermove',move); row.addEventListener('pointerup',end); row.addEventListener('pointercancel',end); }
   function makeRow(p){
     const row=document.createElement('div'); row.className='row';
     row.innerHTML='<input class="name" maxlength="18" placeholder="Prénom" autocomplete="off" autocapitalize="words">'+
@@ -799,14 +803,14 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
   /* suite equilibree d'indices : chaque entree ~meme nombre de fois, melangee, sans repetition adjacente */
   function balancedSeq(poolLen,count){ if(poolLen<=1) return new Array(count).fill(0); const seq=[]; for(let i=0;i<count;i++) seq.push(i%poolLen); for(let i=seq.length-1;i>0;i--){const j=rand(i+1);const tmp=seq[i];seq[i]=seq[j];seq[j]=tmp;} for(let i=1;i<seq.length;i++){ if(seq[i]===seq[i-1]){ for(let k=i+1;k<seq.length;k++){ if(seq[k]!==seq[i]&&seq[k]!==seq[i-1]){ const tmp=seq[i];seq[i]=seq[k];seq[k]=tmp; break; } } } } return seq; }
   function dealDeck(){
-    buildALL();
+    buildALL(); buildQueues();
     const order=buildPile();
     let motifs, PAL;
     if(deckKey==='seduire'||deckKey==='chauffer'){ motifs=motifPool(deckKey); PAL=deckKey==='seduire'?SEDU_PAL:CHAUF_PAL; }
     else { motifs=PAT_URLS; PAL=PALETTE; }
     const mSeq=balancedSeq(motifs.length, cards.length), cSeq=balancedSeq(PAL.length, cards.length);
     cards.forEach((el,i)=>{
-      el._qid=order[i]; el._dead=false;
+      el._qid=order[i]; el._dead=false; el._chosenIdx=null;
       const bg=motifs[mSeq[i]]+', '+PAL[cSeq[i]];
       el.dataset.bg=bg; const art=el.querySelector('.bkart'); if(art) art.style.background=bg;
     });
@@ -931,15 +935,11 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
     if(animating || !el) return; animating=true;
     const person=players[curPlayer];
     const qid=el._qid;                              /* question figée de CETTE carte */
-    const IX=/\{P\}|\{deP\}|\{p:/;
-    let q=ALL[qid];
     const hasMoitie=(person.link!=null && person.link!==curPlayer && players.length>1);
-    if(IX.test(SETS[q.serie][q.idx]) && !hasMoitie){           /* pas de moitié -> question normale, jamais un autre joueur */
-      if(el._altIdx==null){ const cands=SETS[q.serie].map((_,i)=>i).filter(i=>!IX.test(SETS[q.serie][i])); el._altIdx = cands.length ? cands[Math.floor(Math.random()*cands.length)] : q.idx; }
-      q={serie:q.serie, idx:el._altIdx, n:q.n};
-    }
+    if(el._chosenIdx==null){ el._chosenIdx=pickQuestion(ALL[qid].serie, hasMoitie); }
+    const q={serie:ALL[qid].serie, idx:el._chosenIdx, n:ALL[qid].n};
     const raw=SETS[q.serie][q.idx];
-    let partner = (IX.test(raw) && hasMoitie) ? players[person.link] : null;
+    let partner = (IX.test(raw) && hasMoitie) ? players[person.link] : null;  /* couple: uniquement la moitié */
     const reveal=()=>{
       fill(el,person,q,partner);
       el.classList.add('out','flipped');
