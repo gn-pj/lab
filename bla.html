@@ -319,7 +319,8 @@
   /* ===== nouveau système : trames géométriques (lignes blanches) + palette, aléatoire par carte ===== */
   const PW=100, PH=140;
   const _sv=b=>'url("data:image/svg+xml,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='"+PW+"' height='"+PH+"' viewBox='0 0 "+PW+" "+PH+"'>"+b+"</svg>")+'") center/cover no-repeat';
-  const _st=(op,w)=>`fill='none' stroke='white' stroke-opacity='${op}' stroke-width='${w}' stroke-linecap='round' stroke-linejoin='round'`;
+  const PDIM=0.42;   /* atténuation globale des motifs (filigrane) */
+  const _st=(op,w)=>`fill='none' stroke='white' stroke-opacity='${(op*PDIM).toFixed(3)}' stroke-width='${w}' stroke-linecap='round' stroke-linejoin='round'`;
   function pWaves(){const rows=14,amp=2.4,k=3;let b='';for(let i=0;i<rows;i++){const y=i*(PH/(rows-1));let d='M0 '+y;for(let x=0;x<=PW;x+=3){d+=' L'+x+' '+(y+Math.sin(x/PW*Math.PI*2*k+i*0.6)*amp).toFixed(1);}b+=`<path d='${d}' ${_st(.5,1.6)}/>`;}return _sv(b);}
   function pOpart(){const rows=24,amp=1.8,k=4;let b='';for(let i=0;i<rows;i++){const y=i*(PH/(rows-1));let d='M0 '+y;for(let x=0;x<=PW;x+=2.5){d+=' L'+x+' '+(y+Math.sin(x/PW*Math.PI*2*k+i*0.5)*amp).toFixed(1);}b+=`<path d='${d}' ${_st(.42,1.3)}/>`;}return _sv(b);}
   function pScales(){const cs=11,rh=cs*0.58;let b='',ry=0;for(let y=-cs;y<PH+cs;y+=rh){const off=(ry%2)*(cs/2);for(let x=-cs;x<PW+cs;x+=cs){b+=`<path d='M${x+off} ${y} A ${cs/2} ${cs/2} 0 0 1 ${x+off+cs} ${y}' ${_st(.5,1.5)}/>`;}ry++;}return _sv(b);}
@@ -332,7 +333,7 @@
   function pMaze(){const cs=17;let b='';for(let y=0;y<=PH;y+=cs)for(let x=0;x<=PW;x+=cs){b+=`<path d='M${x+3} ${y+cs-3} v${-(cs-6)} h${cs-6} v${cs-9} h${-(cs-12)} v${cs-15>0?cs-15:3}' ${_st(.5,1.5)}/>`;}return _sv(b);}
   function pTrellis(){const cs=12;let b='';for(let i=-PH;i<PW+PH;i+=cs){b+=`<line x1='${i}' y1='0' x2='${i+PH}' y2='${PH}' ${_st(.38,1.2)}/><line x1='${i}' y1='0' x2='${i-PH}' y2='${PH}' ${_st(.38,1.2)}/>`;}return _sv(b);}
   function pZig(){const band=11,w=8;let b='';for(let y=0;y<=PH+band;y+=band){let d='M0 '+y,k=0;for(let x=0;x<=PW;x+=w){d+=' L'+x+' '+(y-(k%2===0?band*0.55:0)).toFixed(1);k++;}b+=`<path d='${d}' ${_st(.5,1.7)}/>`;}return _sv(b);}
-  function pPois(){const cs=12;let b='',ry=0;for(let y=-cs;y<PH+cs;y+=cs){const off=(ry%2)*(cs/2);for(let x=-cs;x<PW+cs;x+=cs){b+=`<circle cx='${x+off}' cy='${y}' r='${(cs*0.28).toFixed(1)}' fill='white' fill-opacity='.45'/>`;}ry++;}return _sv(b);}
+  function pPois(){const cs=12;let b='',ry=0;for(let y=-cs;y<PH+cs;y+=cs){const off=(ry%2)*(cs/2);for(let x=-cs;x<PW+cs;x+=cs){b+=`<circle cx='${x+off}' cy='${y}' r='${(cs*0.28).toFixed(1)}' fill='white' fill-opacity='${(0.45*PDIM).toFixed(3)}'/>`;}ry++;}return _sv(b);}
   function pCroix(){const cs=13,a=3.4;let b='',ry=0;for(let y=0;y<=PH;y+=cs){const off=(ry%2)*(cs/2);for(let x=0;x<=PW+cs;x+=cs){const X=x+off;b+=`<path d='M${X} ${y-a} V${y+a} M${X-a} ${y} H${X+a}' ${_st(.5,1.6)}/>`;}ry++;}return _sv(b);}
   function pCarres(){const cs=15;let b='';for(let y=-cs;y<PH+cs;y+=cs)for(let x=-cs;x<PW+cs;x+=cs){b+=`<rect x='${x+2}' y='${y+2}' width='${cs-4}' height='${cs-4}' ${_st(.42,1.4)}/><rect x='${(x+cs*0.34).toFixed(1)}' y='${(y+cs*0.34).toFixed(1)}' width='${(cs*0.32).toFixed(1)}' height='${(cs*0.32).toFixed(1)}' ${_st(.42,1.4)}/>`;}return _sv(b);}
   function pRayures(){const cs=10;let b='';for(let i=-PH;i<PW+PH;i+=cs){b+=`<line x1='${i}' y1='0' x2='${i+PH}' y2='${PH}' ${_st(.4,2.4)}/>`;}return _sv(b);}
