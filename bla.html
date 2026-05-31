@@ -131,9 +131,10 @@
     box-shadow:0 6px 15px rgba(0,0,0,.16);transition:box-shadow .35s ease;}
   .card.out .face{box-shadow:0 30px 64px rgba(0,0,0,.46);}
   .deck.piling .face{box-shadow:none;}   /* cards stacked at one point → no shadow, never goes dark */
-  .back{display:flex;align-items:flex-end;padding:18px;}
-  .back .bk{position:relative;font-family:"Bricolage Grotesque";font-weight:800;font-size:18.9px;color:rgba(255,255,255,.95);letter-spacing:-.01em;max-width:calc(100% - 12px);line-height:1.02;overflow-wrap:anywhere;}
-  .back .pip{position:absolute;top:16px;right:18px;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.55);}
+  .back{display:flex;align-items:flex-end;padding:18px;background:#fff;}
+  .bkart{position:absolute;inset:7px;border-radius:16px;overflow:hidden;z-index:0;}
+  .back .bk{position:relative;z-index:2;font-family:"Bricolage Grotesque";font-weight:800;font-size:18.9px;color:rgba(255,255,255,.95);letter-spacing:-.01em;max-width:calc(100% - 12px);line-height:1.02;overflow-wrap:anywhere;}
+  .back .pip{position:absolute;top:16px;right:18px;z-index:2;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.55);}
 
   .front{transform:rotateY(180deg);background:#fff;display:flex;flex-direction:column;}
   .fhead{padding:16px 18px 15px;color:#fff;display:flex;flex-direction:column;gap:3px;}
@@ -378,10 +379,13 @@
     ]
     } }
 };
+
+  /* ===== réserves élargies (piochées 12/niveau par partie) ===== */
+  ;(function(){var MORE={connaitre:{1:["Quel objet du quotidien ne pourrais-tu absolument pas remplacer ?","Si on tournait un documentaire sur ta vie, quel en serait le titre ?","Quelle est la plus petite chose qui te rend démesurément heureux ou heureuse ?","Quel talent inutile mais bien réel possèdes-tu ?","Quelle habitude as-tu prise récemment et comptes-tu garder ?","Quel endroit, sur cette planète, voudrais-tu voir au moins une fois ?","Quelle chanson connais-tu par cœur sans l’avoir jamais apprise exprès ?","Si ta semaine avait une couleur, ce serait laquelle, et pourquoi ?","Qu’est-ce qui te fait rire à tous les coups, même quand tu résistes ?","Quel métier rêvais-tu de faire à dix ans ?","Quel plat te ramène directement en enfance ?","Quelle est la dernière chose qui t’a sincèrement étonné ?","Si tu pouvais parler une langue d’un claquement de doigts, laquelle ?","Quel film ou quelle série pourrais-tu revoir sans jamais t’en lasser ?","Quelle saison te ressemble le plus ?","Quel petit luxe t’accordes-tu sans culpabiliser ?"],2:["Qu’est-ce que tu admires le plus chez tes parents ?","Quelle peur as-tu fini par dépasser, et comment ?","Qu’est-ce qui te fait sentir vraiment vivant ?","Quelle décision a le plus changé le cours de ta vie ?","De quoi as-tu le plus peur de passer à côté dans la vie ?","Quel conseil donnerais-tu à la personne que tu étais il y a dix ans ?","Quand t’es-tu senti le plus fier de toi ?","Qu’est-ce que les gens comprennent souvent de travers à ton sujet ?","Qu’est-ce qui te console quand plus rien ne va ?","Quelle qualité aimerais-tu développer davantage ?","Quel échec t’a finalement le plus appris ?","À quel moment as-tu senti que tu devenais adulte ?","Quelle relation, dans ta vie, mériterait que tu y tiennes davantage ?","Que ferais-tu si tu savais que tu ne peux pas échouer ?","Quelle est la chose la plus courageuse que tu aies faite ?","Qu’est-ce qui te rend immédiatement reconnaissant quand tu y penses ?"],3:["Dis à {P} ce qui t’a le plus surpris chez {p:lui|elle} ce soir.","Quelle phrase aimerais-tu entendre, là, maintenant ?","Qu’est-ce que tu n’as jamais osé demander à personne ?","Complète : « Ce dont j’ai le plus besoin et que je demande rarement, c’est… »","Quel pardon, donné ou reçu, t’a le plus libéré ?","Quand t’es-tu senti vraiment compris pour la dernière fois ?","Qu’est-ce que tu aimerais qu’on retienne de toi ?","Dis à {P} en quoi {p:il|elle} pourrait devenir quelqu’un d’important pour toi.","Quelle vérité sur toi ne confies-tu qu’à très peu de gens ?","Quel moment de cette année aimerais-tu pouvoir revivre ?","Nomme une chose que tu as peur d’avouer mais qui te ferait du bien à dire.","Quelle blessure ancienne te touche-t-elle encore aujourd’hui ?","Qu’est-ce que tu remets sans cesse à demain alors que ça compte vraiment ?","Regarde {P} et dis-lui une chose sincère, sans plaisanter.","Quel rêve gardes-tu si secret que tu te l’avoues à peine ?","Termine : « Si je me faisais davantage confiance, je… »"]},seduire:{1:["Ton style de flirt : direct, taquin ou tout en sous-entendus ?","Quel trait d’humour te fait fondre ?","Qu’est-ce qui te donne envie de revoir quelqu’un ?","Quel lieu trouves-tu le plus propice à une rencontre ?","Quelle est ta plus belle qualité quand tu veux plaire ?","Un regard ou un sourire : qu’est-ce qui te fait le plus d’effet ?","Quel petit geste d’attention te séduit immédiatement ?","Quel serait le meilleur tout premier message à t’envoyer ?","Qu’est-ce qui te rend curieux de quelqu’un ?","Comment sais-tu que le courant passe avec quelqu’un ?","Quel compliment fais-tu quand tu veux vraiment charmer ?","Quelle ambiance te met d’humeur à séduire ?","Décris la personne qui retient ton attention dans une soirée.","Quelle est ta façon préférée de briser la glace ?","Qu’est-ce qui rend une voix séduisante, selon toi ?","Quel détail, chez toi, fait toujours son petit effet ?"],2:["Qu’est-ce qui t’attire chez quelqu’un avant même qu’il parle ?","Quelle assurance, chez l’autre, te trouble le plus ?","Raconte la dernière fois que quelqu’un t’a fait de l’effet sans le savoir.","Quel genre d’audace te plaît chez l’autre ?","Qu’est-ce qui te fait passer du « sympa » au « j’ai très envie de le revoir » ?","Quelle qualité rend quelqu’un irrésistible à tes yeux ?","Qu’est-ce qui te séduit dans une conversation ?","Comment réagis-tu quand tu sens qu’on te désire ?","À quel moment te dis-tu : « là, je craque » ?","Quelle est la chose la plus attirante qu’on puisse faire tout habillé ?","Qu’est-ce qui te donne envie de te rapprocher de quelqu’un ?","Quelle attention te fait sentir vraiment choisi ?","Qu’est-ce qui, chez l’autre, te fait perdre le fil de tes idées ?","Quel signe ne trompe jamais, chez toi, quand quelqu’un te plaît ?","Qu’est-ce qui rend une personne magnétique, pour toi ?","Décris l’effet que te fait quelqu’un qui te plaît vraiment."],3:["Y a-t-il quelqu’un, ici ou ailleurs, à qui tu penses en ce moment ?","Quel aveu te brûle les lèvres depuis un moment ?","Avoue la dernière fois que tu as fait mine de rien alors que ça te plaisait.","Quelle est la chose la plus romantique que tu n’as jamais osé faire ?","À qui devrais-tu déclarer quelque chose, sans jamais l’avoir fait ?","Quel geste attends-tu secrètement de quelqu’un ?","Termine : « Si je n’avais pas peur du ridicule, je te dirais que… »","Quel sentiment caches-tu mieux que tu ne le voudrais ?","Si tu pouvais embrasser quelqu’un, là, sans aucune conséquence, qui serait-ce ?","Quel souvenir amoureux refuses-tu d’oublier ?","De quel signe aurais-tu besoin pour enfin oser ?","Avoue un coup de cœur que personne ici ne soupçonne.","Quelle phrase te ferait dire oui sur-le-champ ?","Termine : « Ce que je n’avoue jamais en premier, c’est… »","Qu’est-ce qui te retient encore d’aimer comme tu le voudrais ?","Quelle est la déclaration la plus sincère que tu gardes sur le cœur ?"]},chauffer:{1:["Ton baiser préféré : tendre, joueur ou affamé ?","Quelle partie du corps de l’autre attire ton regard en premier ?","Quel vêtement, sur quelqu’un, te fait littéralement craquer ?","Quel est le compliment le plus osé que tu aimerais recevoir ?","Quelle est ta zone la plus sensible, celle qu’on devine rarement ?","Quel parfum ou quelle odeur te fait tourner la tête ?","Slow collé ou regard à distance : qu’est-ce qui te chauffe le plus ?","Quel détail anodin trouves-tu terriblement sexy ?","Quelle est ta façon préférée qu’on te prenne la main ?","Quel surnom te ferait rougir si on te le murmurait ?","Quel est le geste le plus séduisant qu’on puisse faire à table ?","Qu’est-ce qui te fait frissonner sans même qu’on te touche ?","Quel est le message le plus audacieux que tu aies envoyé… ou voulu envoyer ?","Mordiller, embrasser, chuchoter : ton premier choix dans le cou ?","Quelle scène de film t’a marqué par sa tension ?","Quelle texture aimes-tu sentir contre ta peau ?"],2:["Quelle est la chose la plus audacieuse que tu aies tentée pour séduire ?","Quel fantasme encore sage oserais-tu décrire ici ?","Quel lieu inattendu te paraît terriblement excitant ?","Qu’est-ce qui te fait perdre patience quand le désir monte ?","Quelle phrase, soufflée à l’oreille, te désarmerait complètement ?","Quelle est la limite que tu aimes qu’on approche sans la franchir trop vite ?","Qu’est-ce qui transforme une soirée ordinaire en soirée électrique ?","Quel jeu de regards as-tu déjà joué jusqu’au bout ?","Qu’est-ce que tu trouves le plus excitant dans l’attente ?","Quelle audace aimerais-tu qu’on ait avec toi ?","Quel est le rapprochement le plus mémorable que tu gardes pour toi ?","Qu’est-ce qui, ce soir, te ferait dire « on continue ailleurs » ?","Quel signe envoies-tu quand tu veux qu’on se rapproche ?","Quelle tension préfères-tu : la lente ou l’évidente ?","Qu’est-ce qui te rend audacieux quand d’habitude tu ne l’es pas ?","Quelle est la chose la plus sexy à faire en restant parfaitement habillé ?"],3:["Avoue le désir le moins sage que cette soirée t’a inspiré.","Décris, sans te censurer, le tout premier geste si tout était permis.","Quel fantasme assumerais-tu enfin à voix haute, ce soir ?","Quelle est la chose la plus osée que tu aimerais qu’on ose avec toi ?","Qu’est-ce que tu chuchoterais à la personne qui te fait le plus d’effet ici ?","Quel est ton meilleur atout, une fois la porte fermée ?","Si la nuit n’avait aucune règle, par quoi commencerais-tu ?","Quelle est la pensée la plus brûlante que tu caches depuis tout à l’heure ?","Quel aveu coquin n’as-tu jamais fait à voix haute ?","Qu’est-ce qui te fait perdre complètement le contrôle ?","Quel scénario rejoues-tu dans ta tête plus souvent que tu ne l’admets ?","Quelle invitation, ce soir, ne saurais-tu pas refuser ?","Termine : « Ce que je rêverais vraiment qu’on me fasse, c’est… »","Quel est le souvenir le plus torride que tu oses presque raconter ?","Qu’est-ce que tu aimerais tenter et n’as jamais osé demander ?","Termine, sans réfléchir : « Si je t’attirais dans un coin, je… »"]}};for(var k in MORE){for(var s=1;s<=3;s++){DECKS[k].sets[s]=DECKS[k].sets[s].concat(MORE[k][s]);}}})();
   const ROMAN={1:"I",2:"II",3:"III"};
   let SETS=DECKS.connaitre.sets;
   let ALL=[];
-  function buildALL(){ ALL=[]; let c=0; for(const s of [1,2,3]) SETS[s].forEach((_,i)=>{c++;ALL.push({serie:s,idx:i,n:c});}); }
+  function buildALL(){ ALL=[]; let c=0; const PER=12; for(const s of [1,2,3]){ const pool=SETS[s].map((_,i)=>i); for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=pool[i];pool[i]=pool[j];pool[j]=t;} pool.slice(0,PER).forEach(idx=>{c++;ALL.push({serie:s,idx,n:c});}); } }
   buildALL();
   function selectDeck(k){ if(!DECKS[k]) return; SETS=DECKS[k].sets; buildALL(); }
 
@@ -452,6 +456,86 @@
                  G("#eab308","#f59e0b"),G("#d6336c","#ec4899"),G("#0d9488","#10b981"),G("#6366f1","#8b5cf6"),
                  G("#e11d48","#fb7185"),G("#0891b2","#06b6d4"),G("#65a30d","#84cc16")];
   function cardBG(i){ return PAT_URLS[i%PAT_URLS.length]+', '+PALETTE[i%PALETTE.length]; }
+
+  /* ===== motifs Séduire (organique, canvas) + Chauffer (Bicycle, SVG) ===== */
+  function oRng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  function oHex(h){h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+  function oNoise(seed){const perm=[];for(let i=0;i<256;i++)perm[i]=i;const rnd=oRng(seed);for(let i=255;i>0;i--){const j=Math.floor(rnd()*(i+1));const t=perm[i];perm[i]=perm[j];perm[j]=t;}const p=new Uint8Array(512);for(let i=0;i<512;i++)p[i]=perm[i&255];const fade=t=>t*t*t*(t*(t*6-15)+10),lerp=(a,b,t)=>a+(b-a)*t;function grad(g,x,y){switch(g&3){case 0:return x+y;case 1:return -x+y;case 2:return x-y;default:return -x-y;}}return function(x,y){const X=Math.floor(x)&255,Y=Math.floor(y)&255;x-=Math.floor(x);y-=Math.floor(y);const u=fade(x),v=fade(y);const aa=p[p[X]+Y],ab=p[p[X]+Y+1],ba=p[p[X+1]+Y],bb=p[p[X+1]+Y+1];return lerp(lerp(grad(aa,x,y),grad(ba,x-1,y),u),lerp(grad(ab,x,y-1),grad(bb,x-1,y-1),u),v);};}
+  function oFbm(n,x,y,oct){let v=0,a=0.5,m=0,f=1;for(let i=0;i<oct;i++){v+=a*n(x*f,y*f);m+=a;f*=2;a*=0.5;}return v/m;}
+  function oField(ctx,W,H,colA,colB,seed,decide){const n=oNoise(seed);const A=oHex(colA),B=oHex(colB);const img=ctx.createImageData(W,H);for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=decide(x,y,n)?B:A;const i=(y*W+x)*4;img.data[i]=c[0];img.data[i+1]=c[1];img.data[i+2]=c[2];img.data[i+3]=255;}ctx.putImageData(img,0,0);}
+  function oTuring(c,W,H,a,b,s){oField(c,W,H,a,b,s,(x,y,n)=>Math.abs(oFbm(n,x*0.055,y*0.055,4))<0.10);}
+  function oWorms(c,W,H,a,b,s){oField(c,W,H,a,b,s,(x,y,n)=>Math.abs(oFbm(n,x*0.05,y*0.05,4))<0.185);}
+  function oCoulee(c,W,H,a,b,s){oField(c,W,H,a,b,s,(x,y,n)=>{const q=oFbm(n,x*0.022,y*0.022,2);return oFbm(n,x*0.022+q*1.4+3.1,y*0.022+q*1.4,3)>0;});}
+  function oAnneaux(c,W,H,a,b,s){oField(c,W,H,a,b,s,(x,y,n)=>{const t=((oFbm(n,x*0.03,y*0.03,3)+1)*0.5)*5;return (Math.floor(t)%2)===0;});}
+  function oContours(c,W,H,a,b,s){oField(c,W,H,a,b,s,(x,y,n)=>{const t=((oFbm(n,x*0.03,y*0.03,3)+1)*0.5)*7;return (t-Math.floor(t))<0.13;});}
+  function oVeines(c,W,H,a,b,s){oField(c,W,H,a,b,s,(x,y,n)=>{const ph=x*0.10+oFbm(n,x*0.03,y*0.03,3)*7;return (ph-Math.floor(ph))<0.16;});}
+  function oPointille(ctx,W,H,a,b,seed){const n=oNoise(seed);const A=oHex(a),B=oHex(b);const img=ctx.createImageData(W,H);for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=Math.abs(oFbm(n,x*0.058,y*0.058,4))<0.058?B:A;const i=(y*W+x)*4;img.data[i]=c[0];img.data[i+1]=c[1];img.data[i+2]=c[2];img.data[i+3]=255;}ctx.putImageData(img,0,0);ctx.fillStyle=b;for(let y=4;y<H;y+=7)for(let x=4;x<W;x+=7){if(oFbm(n,x*0.058,y*0.058,4)>0.28){ctx.beginPath();ctx.arc(x,y,1.5,0,7);ctx.fill();}}}
+  function oVseeds(W,H,seed){const rnd=oRng(seed);const cols=6,rows=8,pts=[];for(let gy=0;gy<rows;gy++)for(let gx=0;gx<cols;gx++)pts.push([(gx+0.15+rnd()*0.7)*W/cols,(gy+0.15+rnd()*0.7)*H/rows]);return pts;}
+  function oCellules(ctx,W,H,cell,wall,seed){const pts=oVseeds(W,H,seed);const CC=oHex(cell),WC=oHex(wall);const img=ctx.createImageData(W,H);for(let y=0;y<H;y++)for(let x=0;x<W;x++){let d1=1e9,d2=1e9;for(let k=0;k<pts.length;k++){const dx=x-pts[k][0],dy=y-pts[k][1];const d=dx*dx+dy*dy;if(d<d1){d2=d1;d1=d;}else if(d<d2)d2=d;}const c=(Math.sqrt(d2)-Math.sqrt(d1))<3.0?WC:CC;const i=(y*W+x)*4;img.data[i]=c[0];img.data[i+1]=c[1];img.data[i+2]=c[2];img.data[i+3]=255;}ctx.putImageData(img,0,0);}
+  function oMosaique(ctx,W,H,wall,motif,seed){const pts=oVseeds(W,H,seed);const rnd=oRng(seed*7+1);const WC=oHex(wall),M=oHex(motif);const tones=pts.map(()=>{const f=0.12+rnd()*0.55;return [Math.round(M[0]+(255-M[0])*f),Math.round(M[1]+(255-M[1])*f),Math.round(M[2]+(255-M[2])*f)];});const img=ctx.createImageData(W,H);for(let y=0;y<H;y++)for(let x=0;x<W;x++){let d1=1e9,d2=1e9,id=0;for(let k=0;k<pts.length;k++){const dx=x-pts[k][0],dy=y-pts[k][1];const d=dx*dx+dy*dy;if(d<d1){d2=d1;d1=d;id=k;}else if(d<d2)d2=d;}const c=(Math.sqrt(d2)-Math.sqrt(d1))<2.4?WC:tones[id];const i=(y*W+x)*4;img.data[i]=c[0];img.data[i+1]=c[1];img.data[i+2]=c[2];img.data[i+3]=255;}ctx.putImageData(img,0,0);}
+  function oBotanique(ctx,W,H,bg,leaf,seed){const rnd=oRng(seed);ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);ctx.fillStyle=leaf;ctx.strokeStyle=leaf;function lf(cx,cy,len,rot){ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(len*0.42,-len*0.42,0,-len);ctx.quadraticCurveTo(-len*0.42,-len*0.42,0,0);ctx.fill();ctx.restore();}function sprig(cx,cy,rot){ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(6,-18,2,-34);ctx.stroke();for(let k=1;k<=4;k++)lf(Math.sin(k)*3,-k*8,9,(k%2?1:-1)*0.9);ctx.restore();}for(let i=0;i<12;i++){const cx=rnd()*W,cy=rnd()*H,rot=rnd()*6.28;if(rnd()<0.5)lf(cx,cy,16+rnd()*16,rot);else sprig(cx,cy,rot);}}
+  function organicMotif(seed){const forms=[oTuring,oWorms,oCoulee,oAnneaux,oContours,oVeines,oPointille,oCellules,oMosaique,oBotanique];const ways=[['#4a1734','#ff7aa2'],['#280f24','#c084fc'],['#3a1430','#ff9ebb']];const r=oRng(seed);const f=forms[Math.floor(r()*forms.length)];const w=ways[Math.floor(r()*ways.length)];const cv=document.createElement('canvas');cv.width=126;cv.height=176;f(cv.getContext('2d'),126,176,w[0],w[1],seed);return "url('"+cv.toDataURL('image/png')+"') center/cover no-repeat";}
+  function bicycleBack(field, ink, seed){
+  const W=250,H=350, CX=125, CY=175;
+  const r2=(n)=>Number(n).toFixed(1);
+  function quad(inner){ // 4-fold mirror around centre
+    return "<g transform='translate("+CX+" "+CY+")'>"
+      +"<g>"+inner+"</g><g transform='scale(-1,1)'>"+inner+"</g>"
+      +"<g transform='scale(1,-1)'>"+inner+"</g><g transform='scale(-1,-1)'>"+inner+"</g></g>";
+  }
+  // main filigree arm (one diagonal quadrant, centre-relative, +x +y)
+  const arm="<g fill='none' stroke='"+ink+"' stroke-width='1.5' stroke-linecap='round'>"
+    +"<path d='M16 12 C 58 20 96 58 104 116'/>"
+    +"<path d='M40 16 C 54 38 50 62 34 78'/>"
+    +"<path d='M34 78 C 26 88 15 84 14 74 C 24 78 28 69 22 62'/>"
+    +"</g>"
+    +"<path d='M104 116 C 120 118 126 104 117 95 C 133 100 131 126 106 128 Z' fill='"+ink+"' fill-opacity='0.88'/>"
+    +"<ellipse cx='68' cy='42' rx='6' ry='10.5' transform='rotate(42 68 42)' fill='"+ink+"' fill-opacity='0.82'/>"
+    +"<circle cx='90' cy='80' r='2.4' fill='"+ink+"'/>";
+  // central medallion
+  function medallion(){
+    const R=46; let s="<g transform='translate("+CX+" "+CY+")'>";
+    s+="<g fill='none' stroke='"+ink+"' stroke-width='1.3'><circle r='"+R+"'/><circle r='"+r2(R*0.9)+"'/><circle r='"+r2(R*0.4)+"'/></g>";
+    let rays="<g fill='none' stroke='"+ink+"' stroke-width='0.9'>";const N=44;
+    for(let i=0;i<N;i++){const a=i/N*6.2832;rays+="<line x1='"+r2(Math.cos(a)*R*0.42)+"' y1='"+r2(Math.sin(a)*R*0.42)+"' x2='"+r2(Math.cos(a)*R*0.86)+"' y2='"+r2(Math.sin(a)*R*0.86)+"'/>";}
+    rays+="</g>";
+    let pet="<g fill='"+ink+"'>";const P=16;
+    for(let i=0;i<P;i++){const a=i/P*6.2832,x=Math.cos(a)*R*0.28,y=Math.sin(a)*R*0.28;pet+="<ellipse cx='"+r2(x)+"' cy='"+r2(y)+"' rx='2.1' ry='4.6' transform='rotate("+r2(a*57.3+90)+" "+r2(x)+" "+r2(y)+")'/>";}
+    pet+="<circle r='3.2'/></g>";
+    return s+rays+pet+"</g>";
+  }
+  // border frame + beads + corner fleurons
+  function frame(){
+    let s="<g fill='none' stroke='"+ink+"'>";
+    s+="<rect x='12' y='12' width='226' height='326' rx='12' stroke-width='1.6'/>";
+    s+="<rect x='18' y='18' width='214' height='314' rx='9' stroke-width='0.9'/>";
+    s+="</g>";
+    // beads along the 15px-inset rectangle
+    let bd="<g fill='"+ink+"'>";const bx=15,by=15,bw=220,bh=320,sp=11;
+    for(let x=bx+sp;x<bx+bw-sp/2;x+=sp){bd+="<circle cx='"+r2(x)+"' cy='"+by+"' r='1.5'/><circle cx='"+r2(x)+"' cy='"+(by+bh)+"' r='1.5'/>";}
+    for(let y=by+sp;y<by+bh-sp/2;y+=sp){bd+="<circle cx='"+bx+"' cy='"+r2(y)+"' r='1.5'/><circle cx='"+(bx+bw)+"' cy='"+r2(y)+"' r='1.5'/>";}
+    bd+="</g>";
+    // corner fleurons
+    const corners=[[24,24,1,1],[226,24,-1,1],[24,326,1,-1],[226,326,-1,-1]];
+    let fl="";
+    corners.forEach(c=>{fl+="<g transform='translate("+c[0]+" "+c[1]+") scale("+c[2]+" "+c[3]+")' fill='none' stroke='"+ink+"' stroke-width='1.2'><path d='M0 14 C 0 4 4 0 14 0'/><path d='M4 18 C 14 18 18 14 18 4'/><circle cx='9' cy='9' r='1.8' fill='"+ink+"'/></g>";});
+    return s+bd+fl;
+  }
+  // light diamond diaper ground, clipped inside frame
+  function ground(){
+    let g="<clipPath id='cl"+seed+"'><rect x='22' y='22' width='206' height='306' rx='7'/></clipPath>";
+    let l="<g clip-path='url(#cl"+seed+")' stroke='"+ink+"' stroke-opacity='0.22' stroke-width='0.6'>";
+    const sp=12;
+    for(let i=-H;i<W+H;i+=sp){l+="<line x1='"+i+"' y1='0' x2='"+(i+H)+"' y2='"+H+"'/><line x1='"+i+"' y1='0' x2='"+(i-H)+"' y2='"+H+"'/>";}
+    l+="</g>";
+    return g+l;
+  }
+  const inner="<rect width='"+W+"' height='"+H+"' fill='"+field+"'/>"+ground()+quad(arm)+medallion()+frame();
+  const svg="<svg xmlns='http://www.w3.org/2000/svg' width='"+W+"' height='"+H+"' viewBox='0 0 "+W+" "+H+"'>"+inner+"</svg>";
+  return "url(\"data:image/svg+xml,"+encodeURIComponent(svg)+"\") center/cover no-repeat";
+}
+  function bicycleMotif(seed){const ways=[['#b3122e','#ffffff'],['#c8102e','#fff5f3'],['#7a0f1e','#ffd9d0'],['#5a0a14','#e8c07a'],['#8a0f22','#ffe3da']];const r=oRng(seed);const w=ways[Math.floor(r()*ways.length)];return bicycleBack(w[0],w[1],seed);}
+
 
   /* ---- motifs « monogramme » par icônes (façon Vuitton), pour Séduire / Chauffer ---- */
   const ICONS={
@@ -627,7 +711,7 @@
       el.dataset.bg=bg0;
       el.innerHTML=
         '<div class="floater"><div class="flip">'+
-          '<div class="face back" style="background:'+bg0+'"><span class="pip"></span><span class="bk">Bla</span></div>'+
+          '<div class="face back"><div class="bkart" style="background:'+bg0+'"></div><span class="pip"></span><span class="bk">Bla</span></div>'+
           '<div class="face front">'+
             '<div class="fhead"><span class="fserie"></span><span class="fname"></span></div>'+
             '<div class="fbody"><p class="fq"></p></div>'+
@@ -689,18 +773,16 @@
   }
   /* pose le deck UNE SEULE FOIS : chaque carte reçoit sa question + son motif (couleur + trame) définitifs */
   function dealDeck(){
+    buildALL();                              /* nouvelle pige de 36 questions (12/niveau) à chaque partie */
     const order=buildPile();
-    const st=DECK_STYLE[deckKey];
-    const cols = st ? st.cols : PALETTE;
     let lastC=-1, lastP=-1;
     cards.forEach((el,i)=>{
       el._qid=order[i]; el._dead=false;
-      let c; do{c=rand(cols.length);}while(cols.length>1&&c===lastC); lastC=c;
-      let motif;
-      if(st && st.icons){ motif=monogram(st.icons, rand(2000000000)+1); }   /* monogramme d'icônes du thème */
-      else { let p; do{p=rand(PAT_URLS.length);}while(PAT_URLS.length>1&&p===lastP); lastP=p; motif=PAT_URLS[p]; }
-      const bg=motif+', '+cols[c];
-      el.dataset.bg=bg; const bk=el.querySelector('.face.back'); if(bk) bk.style.background=bg;
+      let bg;
+      if(deckKey==='seduire'){ bg=organicMotif(rand(2000000000)+1); }        /* motif organique génératif */
+      else if(deckKey==='chauffer'){ bg=bicycleMotif(rand(2000000000)+1); }  /* dos Bicycle ornementé */
+      else { let c; do{c=rand(PALETTE.length);}while(PALETTE.length>1&&c===lastC); lastC=c; let p; do{p=rand(PAT_URLS.length);}while(PAT_URLS.length>1&&p===lastP); lastP=p; bg=PAT_URLS[p]+', '+PALETTE[c]; }
+      el.dataset.bg=bg; const art=el.querySelector('.bkart'); if(art) art.style.background=bg;
     });
     dealt=true;
   }
