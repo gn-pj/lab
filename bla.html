@@ -163,10 +163,10 @@
   .prompt{font-size:14px;font-weight:500;letter-spacing:.04em;color:rgba(255,255,255,.85);
     animation:pulse 2.6s ease-in-out infinite;}
   @keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
-  .actions{display:none;gap:12px;}
+  .actions{display:none;gap:10px;flex-wrap:wrap;justify-content:center;}
   .actions.show{display:flex;animation:fade .4s ease;}
   .btn{border:none;cursor:pointer;font-family:"Bricolage Grotesque";font-weight:700;font-size:14px;
-    padding:14px 24px;border-radius:38px;transition:.2s;}
+    padding:13px 20px;border-radius:38px;transition:.2s;white-space:nowrap;}
   .btn.fill{color:#1b1a3a;background:#fff;box-shadow:0 10px 26px rgba(0,0,0,.3);}
   .btn.fill:hover{transform:translateY(-2px);}
   .btn.ghost{color:#fff;background:rgba(255,255,255,.12);}
@@ -223,6 +223,7 @@
       <div id="prompt" class="prompt">Touche une carte</div>
       <div id="actions" class="actions">
         <button id="again" class="btn ghost">Piger à nouveau</button>
+        <button id="del" class="btn ghost">Supprimer</button>
         <button id="next" class="btn fill">Au suivant</button>
       </div>
     </div>
@@ -710,6 +711,23 @@
     animating=true; setTimeout(()=>animating=false,420);
   }
 
+  /* « Supprimer » : retire la question courante et en ouvre une autre tout de suite */
+  function deleteAndDraw(){
+    if(animating || !curEl) return;
+    animating=true; clearTimer();
+    if(curQid!=null){ takeQ(curQid); curQid=null; }
+    curEl.classList.remove('out','flipped'); curEl=null;
+    deck.classList.remove('frozen','presenting');
+    $('actions').classList.remove('show');
+    pan=0; cancelInertia();
+    applyVis();                                   /* l'éventail rétrécit + rebind */
+    setTimeout(()=>{
+      animating=false;
+      if(vis>=1) pullOut(cards[rand(vis)]);       /* on pige une autre carte automatiquement */
+      else showPrompt();
+    },220);
+  }
+
   /* visual shuffle THROUGH THE CENTRE: cards gather inward (full size), then spread back out */
   function shuffleByCenter(){
     animating=true; cancelInertia(); pan=0;
@@ -756,6 +774,7 @@
   }
 
   $('again').onclick=()=>{ if(animating) return; putBack(); };                                   /* même joueur : on garde le tas */
+  $('del').onclick=()=>{ if(animating) return; deleteAndDraw(); };                                /* supprime la question et en pige une autre */
   $('next').onclick=()=>{ if(animating) return; if(curQid!=null){ takeQ(curQid); curQid=null; } curPlayer=(curPlayer+1)%players.length; shuffleByCenter(); }; /* valide la question puis joueur suivant */
 
   /* ---------- finite left/right drag, with a soft bounce at the ends ---------- */
