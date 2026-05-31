@@ -491,6 +491,7 @@
 
   /* ---------- game state ---------- */
   const N=ALL.length, AMP=44, TILT=13;
+  const MAXVIS=Math.ceil(N/1.5);           /* éventail allégé : on n'affiche jamais plus de N/1.5 cartes */
   const KFIX=2*Math.PI/70;                 /* sine wavelength ≈ 70vw — cards ride a fixed wave */
   let curPlayer=0, curEl=null, animating=false, pan=0, vis=N;
 
@@ -503,7 +504,7 @@
     const pl=players[curPlayer];
     let r = pl._q ? (pl._q.length-pl._qp) : ALL.length;
     if(r<=0){ pl._q=buildPile(); pl._qp=0; r=ALL.length; }   /* pile épuisée → on rebrasse (même amorce douce) */
-    vis=Math.max(1, Math.min(r, N));
+    vis=Math.max(1, Math.min(r, MAXVIS));
   }
 
   /* finite fan: cards on a fixed sine, centred; pan slides them (no loop, real start/end) */
