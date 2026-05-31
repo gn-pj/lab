@@ -56,6 +56,10 @@
   #setup{align-items:center;justify-content:safe center;padding:24px;overflow-y:auto;}
   #setup .brand{font-size:46px;margin-bottom:4px;}
   .sub{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:28px;}
+  .modes{display:flex;gap:4px;background:rgba(255,255,255,.1);border-radius:999px;padding:4px;margin:0 auto 16px;width:max-content;}
+  .modes .mode{border:none;background:transparent;color:rgba(255,255,255,.72);font-family:inherit;font-weight:600;font-size:14px;padding:8px 16px;border-radius:999px;cursor:pointer;transition:.2s;}
+  .modes .mode.on{background:#fff;color:#1c1a15;}
+  .groupnote{display:none;color:rgba(255,255,255,.82);font-size:15px;max-width:30ch;margin:2px auto 6px;text-align:center;line-height:1.5;}
   .rows{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;}
   .row{display:flex;gap:10px;align-items:center;}
   .name{flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);
@@ -184,6 +188,11 @@
     <button id="reset" class="reset-x" title="Oublier les prénoms" aria-label="Réinitialiser les prénoms">✕</button>
     <div class="brand">Bla</div>
     <div class="sub">Deux joueurs ou plus. Une carte à la fois.</div>
+    <div class="modes" id="modes">
+      <button type="button" class="mode on" data-m="names">Avec prénoms</button>
+      <button type="button" class="mode" data-m="group">En groupe</button>
+    </div>
+    <div id="groupnote" class="groupnote">Tout le monde joue le même paquet. Pas de prénoms : on se passe le téléphone.</div>
     <div id="rows" class="rows"></div>
     <div id="hint" class="hint"></div>
     <div class="cta-row">
@@ -305,13 +314,43 @@
     zip(mg,  [dots2(.22,1.6,12), dots(.2,2.4,18), stripe(.13,45,2,10), dots2(.18,1.3,10), dots(.16,3,24)]), /* magenta · confettis */
     zip(ind, [cross(.13,2,11), stripe(.15,45,5,14), grid(.12,18,1), stripe(.14,135,5,14), cross(.11,1,9)])  /* indigo · tissage */
   ];
-  const CARDS=PSETS[0];   /* default for the initial closed deck (repainted per player immediately) */
+  const CARDS=PSETS[0];   /* (ancien système, conservé mais inutilisé) */
+
+  /* ===== nouveau système : trames géométriques (lignes blanches) + palette, aléatoire par carte ===== */
+  const PW=100, PH=140;
+  const _sv=b=>'url("data:image/svg+xml,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='"+PW+"' height='"+PH+"' viewBox='0 0 "+PW+" "+PH+"'>"+b+"</svg>")+'") center/cover no-repeat';
+  const _st=(op,w)=>`fill='none' stroke='white' stroke-opacity='${op}' stroke-width='${w}' stroke-linecap='round' stroke-linejoin='round'`;
+  function pWaves(){const rows=14,amp=2.4,k=3;let b='';for(let i=0;i<rows;i++){const y=i*(PH/(rows-1));let d='M0 '+y;for(let x=0;x<=PW;x+=3){d+=' L'+x+' '+(y+Math.sin(x/PW*Math.PI*2*k+i*0.6)*amp).toFixed(1);}b+=`<path d='${d}' ${_st(.5,1.6)}/>`;}return _sv(b);}
+  function pOpart(){const rows=24,amp=1.8,k=4;let b='';for(let i=0;i<rows;i++){const y=i*(PH/(rows-1));let d='M0 '+y;for(let x=0;x<=PW;x+=2.5){d+=' L'+x+' '+(y+Math.sin(x/PW*Math.PI*2*k+i*0.5)*amp).toFixed(1);}b+=`<path d='${d}' ${_st(.42,1.3)}/>`;}return _sv(b);}
+  function pScales(){const cs=11,rh=cs*0.58;let b='',ry=0;for(let y=-cs;y<PH+cs;y+=rh){const off=(ry%2)*(cs/2);for(let x=-cs;x<PW+cs;x+=cs){b+=`<path d='M${x+off} ${y} A ${cs/2} ${cs/2} 0 0 1 ${x+off+cs} ${y}' ${_st(.5,1.5)}/>`;}ry++;}return _sv(b);}
+  function pDiam(){const cs=15;let b='';for(let y=0;y<=PH+cs;y+=cs)for(let x=0;x<=PW+cs;x+=cs){[0.5,0.33,0.16].forEach(f=>{const r=cs*f;b+=`<path d='M${x} ${(y-r).toFixed(1)} L${(x+r).toFixed(1)} ${y} L${x} ${(y+r).toFixed(1)} L${(x-r).toFixed(1)} ${y} Z' ${_st(.5,1.3)}/>`;});}return _sv(b);}
+  function pChev(){const w=6,h=8;let b='';for(let cx=0;cx<=PW+w;cx+=w*2){for(let y=-h;y<PH+h;y+=h){b+=`<path d='M${cx} ${y} L${cx+w} ${y+h/2} L${cx} ${y+h}' ${_st(.5,1.6)}/><path d='M${cx+w} ${y} L${cx+w*2} ${y+h/2} L${cx+w} ${y+h}' ${_st(.5,1.6)}/>`;}}return _sv(b);}
+  function pTri(){const cw=16,th=20;let b='',ry=0;for(let y=0;y<=PH+th;y+=th){const off=(ry%2)*(cw/2);for(let x=-cw;x<PW+cw;x+=cw){const apex=x+off+cw/2;b+=`<path d='M${x+off} ${y} L${apex} ${y-th} L${x+off+cw} ${y}' ${_st(.5,1.4)}/>`;for(let li=1;li<=3;li++){const yy=y-th*li/4,half=(cw/2)*(1-li/4);b+=`<line x1='${(apex-half).toFixed(1)}' y1='${yy.toFixed(1)}' x2='${(apex+half).toFixed(1)}' y2='${yy.toFixed(1)}' ${_st(.4,1.1)}/>`;}}ry++;}return _sv(b);}
+  function pCircles(){const cs=16;let b='',ry=0;for(let y=-cs;y<PH+cs;y+=cs){const off=(ry%2)*(cs/2);for(let x=-cs;x<PW+cs;x+=cs){b+=`<circle cx='${x+off}' cy='${y}' r='${(cs/2).toFixed(1)}' ${_st(.42,1.4)}/><circle cx='${x+off}' cy='${y}' r='${(cs/4).toFixed(1)}' ${_st(.42,1.4)}/>`;}ry++;}return _sv(b);}
+  function pRings(){const cs=18;let b='',ry=0;for(let y=-cs;y<PH+cs;y+=cs){const off=(ry%2)*(cs/2);for(let x=-cs;x<PW+cs;x+=cs){[0.46,0.3,0.14].forEach(f=>{b+=`<circle cx='${x+off}' cy='${y}' r='${(cs*f).toFixed(1)}' ${_st(.5,1.4)}/>`;});}ry++;}return _sv(b);}
+  function pCubes(){const u=9,dx=u*0.866;let b='',ry=0;for(let cy=0;cy<PH+u*2;cy+=u*1.5){const off=(ry%2)*dx;for(let cx=-u;cx<PW+u*2;cx+=dx*2){const X=cx+off,Y=cy;b+=`<path d='M${X} ${(Y-u).toFixed(1)} L${(X+dx).toFixed(1)} ${(Y-u/2).toFixed(1)} L${X} ${Y} L${(X-dx).toFixed(1)} ${(Y-u/2).toFixed(1)} Z' ${_st(.4,1.1)}/>`;b+=`<path d='M${(X-dx).toFixed(1)} ${(Y-u/2).toFixed(1)} L${X} ${Y} L${X} ${(Y+u).toFixed(1)} L${(X-dx).toFixed(1)} ${(Y+u/2).toFixed(1)} Z' ${_st(.4,1.1)}/>`;b+=`<path d='M${(X+dx).toFixed(1)} ${(Y-u/2).toFixed(1)} L${X} ${Y} L${X} ${(Y+u).toFixed(1)} L${(X+dx).toFixed(1)} ${(Y+u/2).toFixed(1)} Z' ${_st(.4,1.1)}/>`;}ry++;}return _sv(b);}
+  function pMaze(){const cs=17;let b='';for(let y=0;y<=PH;y+=cs)for(let x=0;x<=PW;x+=cs){b+=`<path d='M${x+3} ${y+cs-3} v${-(cs-6)} h${cs-6} v${cs-9} h${-(cs-12)} v${cs-15>0?cs-15:3}' ${_st(.5,1.5)}/>`;}return _sv(b);}
+  function pTrellis(){const cs=12;let b='';for(let i=-PH;i<PW+PH;i+=cs){b+=`<line x1='${i}' y1='0' x2='${i+PH}' y2='${PH}' ${_st(.38,1.2)}/><line x1='${i}' y1='0' x2='${i-PH}' y2='${PH}' ${_st(.38,1.2)}/>`;}return _sv(b);}
+  function pZig(){const band=11,w=8;let b='';for(let y=0;y<=PH+band;y+=band){let d='M0 '+y,k=0;for(let x=0;x<=PW;x+=w){d+=' L'+x+' '+(y-(k%2===0?band*0.55:0)).toFixed(1);k++;}b+=`<path d='${d}' ${_st(.5,1.7)}/>`;}return _sv(b);}
+  function pPois(){const cs=12;let b='',ry=0;for(let y=-cs;y<PH+cs;y+=cs){const off=(ry%2)*(cs/2);for(let x=-cs;x<PW+cs;x+=cs){b+=`<circle cx='${x+off}' cy='${y}' r='${(cs*0.28).toFixed(1)}' fill='white' fill-opacity='.45'/>`;}ry++;}return _sv(b);}
+  function pCroix(){const cs=13,a=3.4;let b='',ry=0;for(let y=0;y<=PH;y+=cs){const off=(ry%2)*(cs/2);for(let x=0;x<=PW+cs;x+=cs){const X=x+off;b+=`<path d='M${X} ${y-a} V${y+a} M${X-a} ${y} H${X+a}' ${_st(.5,1.6)}/>`;}ry++;}return _sv(b);}
+  function pCarres(){const cs=15;let b='';for(let y=-cs;y<PH+cs;y+=cs)for(let x=-cs;x<PW+cs;x+=cs){b+=`<rect x='${x+2}' y='${y+2}' width='${cs-4}' height='${cs-4}' ${_st(.42,1.4)}/><rect x='${(x+cs*0.34).toFixed(1)}' y='${(y+cs*0.34).toFixed(1)}' width='${(cs*0.32).toFixed(1)}' height='${(cs*0.32).toFixed(1)}' ${_st(.42,1.4)}/>`;}return _sv(b);}
+  function pRayures(){const cs=10;let b='';for(let i=-PH;i<PW+PH;i+=cs){b+=`<line x1='${i}' y1='0' x2='${i+PH}' y2='${PH}' ${_st(.4,2.4)}/>`;}return _sv(b);}
+  function pGrille(){const cs=13;let b='';for(let x=0;x<=PW;x+=cs)b+=`<line x1='${x}' y1='0' x2='${x}' y2='${PH}' ${_st(.4,1.3)}/>`;for(let y=0;y<=PH;y+=cs)b+=`<line x1='0' y1='${y}' x2='${PW}' y2='${y}' ${_st(.4,1.3)}/>`;return _sv(b);}
+  const PATTERNS=[pWaves,pOpart,pScales,pDiam,pChev,pTri,pCircles,pRings,pCubes,pMaze,pTrellis,pZig,pPois,pCroix,pCarres,pRayures,pGrille];
+  const PAT_URLS=PATTERNS.map(fn=>fn());
+  const PALETTE=[G("#ff8a4c","#ff4d6d"),G("#36b7f5","#5a6bff"),G("#22c55e","#0ea5a3"),G("#ec4899","#f43f5e"),
+                 G("#14b8a6","#22d3ee"),G("#7c5cff","#a855f7"),G("#ef4444","#f97316"),G("#0ea5e9","#3b82f6"),
+                 G("#eab308","#f59e0b"),G("#d6336c","#ec4899"),G("#0d9488","#10b981"),G("#6366f1","#8b5cf6"),
+                 G("#e11d48","#fb7185"),G("#0891b2","#06b6d4"),G("#65a30d","#84cc16")];
+  function cardBG(i){ return PAT_URLS[i%PAT_URLS.length]+', '+PALETTE[i%PALETTE.length]; }
 
   const $=id=>document.getElementById(id);
   const rand=n=>Math.floor(Math.random()*n);
   function resolve(text, fem, partner){
-    const deP = partner ? (/^[aeiouhéèàâêîï]/i.test(partner.name) ? "d'"+partner.name : "de "+partner.name) : "de l'autre";
-    text=text.replace(/\{deP\}/g, deP).replace(/\{P\}/g, partner?partner.name:"l'autre");
+    const noP = (typeof groupMode!=='undefined' && groupMode) ? "quelqu'un" : "l'autre";
+    const deP = partner ? (/^[aeiouhéèàâêîï]/i.test(partner.name) ? "d'"+partner.name : "de "+partner.name) : ((typeof groupMode!=='undefined' && groupMode) ? "de quelqu'un" : "de l'autre");
+    text=text.replace(/\{deP\}/g, deP).replace(/\{P\}/g, partner?partner.name:noP);
     return text.replace(/\{(p:)?([^|}]+)\|([^}]+)\}/g,(_,p,a,b)=>{
       const useFem = p ? (partner?partner.fem:false) : fem;
       return useFem ? b : a;
@@ -369,6 +408,18 @@
   }
   $('addp').onclick=addRow;
   let players=[];
+  let groupMode=false;
+  $('modes').querySelectorAll('.mode').forEach(btn=>{
+    btn.onclick=()=>{
+      $('modes').querySelectorAll('.mode').forEach(b=>b.classList.toggle('on',b===btn));
+      groupMode = btn.dataset.m==='group';
+      $('rows').style.display   = groupMode?'none':'';
+      $('addp').style.display   = groupMode?'none':'';
+      $('reset').style.display  = groupMode?'none':'';
+      $('groupnote').style.display = groupMode?'block':'none';
+      $('hint').classList.remove('show');
+    };
+  });
 
   /* ---- remember names between games ---- */
   const LS='bla.players';
@@ -389,6 +440,14 @@
   };
 
   $('start').onclick=()=>{
+    if(groupMode){
+      players=[{name:'',fem:false}];
+      $('hint').classList.remove('show');
+      $('setup').classList.remove('active');
+      $('game').classList.add('active');
+      startGame();
+      return;
+    }
     const list=[...rowsEl.querySelectorAll('.row')].map(r=>({
       name:r.querySelector('.name').value.trim(),
       fem:r.querySelector('.g.on').dataset.g==='f'
@@ -408,11 +467,11 @@
     deck.innerHTML=''; cards=[];
     for(let i=0;i<N;i++){
       const el=document.createElement('div'); el.className='card';
-      const cc=CARDS[i%CARDS.length];
-      el.dataset.bg=cc.p+', '+cc.g;
+      const bg0=cardBG(i);
+      el.dataset.bg=bg0;
       el.innerHTML=
         '<div class="floater"><div class="flip">'+
-          '<div class="face back" style="background:'+cc.p+', '+cc.g+'"><span class="pip"></span><span class="bk">Bla</span></div>'+
+          '<div class="face back" style="background:'+bg0+'"><span class="pip"></span><span class="bk">Bla</span></div>'+
           '<div class="face front">'+
             '<div class="fhead"><span class="fserie"></span><span class="fname"></span></div>'+
             '<div class="fbody"><p class="fq"></p></div>'+
@@ -475,27 +534,17 @@
   function nextQ(p){ const pl=players[p]; if(!pl._q||pl._qp>=pl._q.length){ pl._q=buildPile(); pl._qp=0; } return ALL[pl._q[pl._qp++]]; }
 
   /* the deck "belongs" to whoever's turn it is → their name on every back */
-  function setBacks(){ const nm=players[curPlayer]?players[curPlayer].name:''; cards.forEach(el=>{ const b=el.querySelector('.bk'); if(b) b.textContent=nm; }); }
+  function setBacks(){ const nm = groupMode ? 'Bla' : (players[curPlayer]?players[curPlayer].name:''); cards.forEach(el=>{ const b=el.querySelector('.bk'); if(b) b.textContent=nm; }); }
 
-  /* redistribute the CURRENT PLAYER'S set; never two identical side by side (linear: any prefix stays valid) */
+  /* chaque carte : trame + couleur au hasard ; jamais deux fois la même côte à côte */
   function paintCards(){
-    const SET=PSETS[curPlayer%PSETS.length];
-    const conflict=(a,b)=> a.g===b.g||a.p===b.p;
-    const n=cards.length;
-    let pool=cards.map((_,i)=>SET[i%SET.length]);
-    const valid=p=>{ for(let i=1;i<n;i++){ if(conflict(p[i],p[i-1])) return false; } return true; };
-    let ok=false;
-    for(let a=0;a<300&&!ok;a++){ for(let i=n-1;i>0;i--){const j=rand(i+1);[pool[i],pool[j]]=[pool[j],pool[i]];} ok=valid(pool); }
-    if(!ok){
-      for(let i=1;i<n;i++){
-        if(conflict(pool[i],pool[i-1])){
-          for(let j=i+1;j<n;j++){
-            if(!conflict(pool[j],pool[i-1]) && (i+1>=n || !conflict(pool[j],pool[i+1]))){ [pool[i],pool[j]]=[pool[j],pool[i]]; break; }
-          }
-        }
-      }
-    }
-    cards.forEach((el,i)=>{ const bg=pool[i].p+', '+pool[i].g; el.dataset.bg=bg; el.querySelector('.face.back').style.background=bg; });
+    let lastP=-1,lastC=-1;
+    cards.forEach((el)=>{
+      let p; do{p=rand(PAT_URLS.length);}while(PAT_URLS.length>1&&p===lastP); lastP=p;
+      let c; do{c=rand(PALETTE.length);}while(PALETTE.length>1&&c===lastC); lastC=c;
+      const bg=PAT_URLS[p]+', '+PALETTE[c];
+      el.dataset.bg=bg; el.querySelector('.face.back').style.background=bg;
+    });
   }
 
   function startGame(){
@@ -532,7 +581,7 @@
   }
 
   function showPrompt(){
-    $('prompt').textContent='Au tour de '+players[curPlayer].name+' · touche une carte';
+    $('prompt').textContent = groupMode ? 'Touche une carte' : ('Au tour de '+players[curPlayer].name+' · touche une carte');
     $('prompt').style.display='';
   }
 
