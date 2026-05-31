@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bla — 5 × 36</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Archivo",sans-serif;color:#fff;
+    background:#14132b radial-gradient(1200px 700px at 20% -10%, rgba(255,80,170,.18), transparent 60%),
+               radial-gradient(1000px 700px at 100% 0%, rgba(40,200,255,.16), transparent 55%);
+    min-height:100vh;padding:26px 16px 70px;}
+  h1{font-family:"Bricolage Grotesque";font-weight:800;font-size:28px;margin:0 0 4px;letter-spacing:-.02em;}
+  .sub{color:rgba(255,255,255,.66);font-size:14px;margin:0 0 26px;max-width:680px;}
+  .scn{margin:0 0 30px;}
+  .scn h2{font-family:"Bricolage Grotesque";font-weight:800;font-size:17px;margin:0 0 11px;color:rgba(255,255,255,.85);}
+  .deck{display:flex;gap:8px;flex-wrap:wrap;}
+  .card{width:62px;aspect-ratio:5/7;border-radius:11px;overflow:hidden;
+    box-shadow:0 5px 13px rgba(0,0,0,.26);}
+</style>
+</head>
+<body>
+  <h1>Bla — 5 × 36</h1>
+  <p class="sub">5 scénarios, 36 cartes chacun. Pattern + couleur tirés au hasard pour chaque carte. Aperçu seulement — le jeu n'est pas modifié.</p>
+  <div id="board"></div>
+
+<script>
+  function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  const W=100,H=140;
+  const SV=(b)=>"<svg xmlns='http://www.w3.org/2000/svg' width='"+W+"' height='"+H+"' viewBox='0 0 "+W+" "+H+"'>"+b+"</svg>";
+  const P=(b)=>'url("data:image/svg+xml,'+encodeURIComponent(SV(b))+'") center/cover no-repeat';
+  const ST=(op,w)=>`fill='none' stroke='white' stroke-opacity='${op}' stroke-width='${w}' stroke-linecap='round' stroke-linejoin='round'`;
+
+  function waves(s){const rows=14,amp=2.4,k=3;let b='';for(let i=0;i<rows;i++){const y=i*(H/(rows-1));let d='M0 '+y;for(let x=0;x<=W;x+=3){d+=' L'+x+' '+(y+Math.sin(x/W*Math.PI*2*k+i*0.6)*amp).toFixed(1);}b+=`<path d='${d}' ${ST(.5,1.6)}/>`;}return P(b);}
+  function opart(s){const rows=24,amp=1.8,k=4;let b='';for(let i=0;i<rows;i++){const y=i*(H/(rows-1));let d='M0 '+y;for(let x=0;x<=W;x+=2.5){d+=' L'+x+' '+(y+Math.sin(x/W*Math.PI*2*k+i*0.5)*amp).toFixed(1);}b+=`<path d='${d}' ${ST(.42,1.3)}/>`;}return P(b);}
+  function scales(s){const cs=11,rh=cs*0.58;let b='',ry=0;for(let y=-cs;y<H+cs;y+=rh){const off=(ry%2)*(cs/2);for(let x=-cs;x<W+cs;x+=cs){b+=`<path d='M${x+off} ${y} A ${cs/2} ${cs/2} 0 0 1 ${x+off+cs} ${y}' ${ST(.5,1.5)}/>`;}ry++;}return P(b);}
+  function ndiamonds(s){const cs=15;let b='';for(let y=0;y<=H+cs;y+=cs)for(let x=0;x<=W+cs;x+=cs){[0.5,0.33,0.16].forEach(f=>{const r=cs*f;b+=`<path d='M${x} ${(y-r).toFixed(1)} L${(x+r).toFixed(1)} ${y} L${x} ${(y+r).toFixed(1)} L${(x-r).toFixed(1)} ${y} Z' ${ST(.5,1.3)}/>`;});}return P(b);}
+  function chevrons(s){const w=6,h=8;let b='';for(let cx=0;cx<=W+w;cx+=w*2){for(let y=-h;y<H+h;y+=h){b+=`<path d='M${cx} ${y} L${cx+w} ${y+h/2} L${cx} ${y+h}' ${ST(.5,1.6)}/><path d='M${cx+w} ${y} L${cx+w*2} ${y+h/2} L${cx+w} ${y+h}' ${ST(.5,1.6)}/>`;}}return P(b);}
+  function triangles(s){const cw=16,th=20;let b='',ry=0;for(let y=0;y<=H+th;y+=th){const off=(ry%2)*(cw/2);for(let x=-cw;x<W+cw;x+=cw){const apex=x+off+cw/2;b+=`<path d='M${x+off} ${y} L${apex} ${y-th} L${x+off+cw} ${y}' ${ST(.5,1.4)}/>`;for(let li=1;li<=3;li++){const yy=y-th*li/4,half=(cw/2)*(1-li/4);b+=`<line x1='${(apex-half).toFixed(1)}' y1='${yy.toFixed(1)}' x2='${(apex+half).toFixed(1)}' y2='${yy.toFixed(1)}' ${ST(.4,1.1)}/>`;}}ry++;}return P(b);}
+  function cercles(s){const cs=16;let b='',ry=0;for(let y=-cs;y<H+cs;y+=cs){const off=(ry%2)*(cs/2);for(let x=-cs;x<W+cs;x+=cs){b+=`<circle cx='${x+off}' cy='${y}' r='${(cs/2).toFixed(1)}' ${ST(.42,1.4)}/><circle cx='${x+off}' cy='${y}' r='${(cs/4).toFixed(1)}' ${ST(.42,1.4)}/>`;}ry++;}return P(b);}
+  function anneaux(s){const cs=18;let b='',ry=0;for(let y=-cs;y<H+cs;y+=cs){const off=(ry%2)*(cs/2);for(let x=-cs;x<W+cs;x+=cs){[0.46,0.3,0.14].forEach(f=>{b+=`<circle cx='${x+off}' cy='${y}' r='${(cs*f).toFixed(1)}' ${ST(.5,1.4)}/>`;});}ry++;}return P(b);}
+  function cubes(s){const u=9,dx=u*0.866;let b='',ry=0;for(let cy=0;cy<H+u*2;cy+=u*1.5){const off=(ry%2)*dx;for(let cx=-u;cx<W+u*2;cx+=dx*2){const X=cx+off,Y=cy;
+    b+=`<path d='M${X} ${(Y-u).toFixed(1)} L${(X+dx).toFixed(1)} ${(Y-u/2).toFixed(1)} L${X} ${Y} L${(X-dx).toFixed(1)} ${(Y-u/2).toFixed(1)} Z' ${ST(.4,1.1)}/>`;
+    b+=`<path d='M${(X-dx).toFixed(1)} ${(Y-u/2).toFixed(1)} L${X} ${Y} L${X} ${(Y+u).toFixed(1)} L${(X-dx).toFixed(1)} ${(Y+u/2).toFixed(1)} Z' ${ST(.4,1.1)}/>`;
+    b+=`<path d='M${(X+dx).toFixed(1)} ${(Y-u/2).toFixed(1)} L${X} ${Y} L${X} ${(Y+u).toFixed(1)} L${(X+dx).toFixed(1)} ${(Y+u/2).toFixed(1)} Z' ${ST(.4,1.1)}/>`;}ry++;}return P(b);}
+  function labyrinthe(s){const cs=17;let b='';for(let y=0;y<=H;y+=cs)for(let x=0;x<=W;x+=cs){b+=`<path d='M${x+3} ${y+cs-3} v${-(cs-6)} h${cs-6} v${cs-9} h${-(cs-12)} v${cs-15>0?cs-15:3}' ${ST(.5,1.5)}/>`;}return P(b);}
+  function treillis(s){const cs=12;let b='';for(let i=-H;i<W+H;i+=cs){b+=`<line x1='${i}' y1='0' x2='${i+H}' y2='${H}' ${ST(.38,1.2)}/><line x1='${i}' y1='0' x2='${i-H}' y2='${H}' ${ST(.38,1.2)}/>`;}return P(b);}
+  function zigzag(s){const band=11,w=8;let b='';for(let y=0;y<=H+band;y+=band){let d='M0 '+y,k=0;for(let x=0;x<=W;x+=w){d+=' L'+x+' '+(y-(k%2===0?band*0.55:0)).toFixed(1);k++;}b+=`<path d='${d}' ${ST(.5,1.7)}/>`;}return P(b);}
+  function pois(s){const cs=12;let b='',ry=0;for(let y=-cs;y<H+cs;y+=cs){const off=(ry%2)*(cs/2);for(let x=-cs;x<W+cs;x+=cs){b+=`<circle cx='${x+off}' cy='${y}' r='${(cs*0.28).toFixed(1)}' fill='white' fill-opacity='.45'/>`;}ry++;}return P(b);}
+  function croix(s){const cs=13,a=3.4;let b='',ry=0;for(let y=0;y<=H;y+=cs){const off=(ry%2)*(cs/2);for(let x=0;x<=W+cs;x+=cs){const X=x+off;b+=`<path d='M${X} ${y-a} V${y+a} M${X-a} ${y} H${X+a}' ${ST(.5,1.6)}/>`;}ry++;}return P(b);}
+  function carres(s){const cs=15;let b='';for(let y=-cs;y<H+cs;y+=cs)for(let x=-cs;x<W+cs;x+=cs){b+=`<rect x='${x+2}' y='${y+2}' width='${cs-4}' height='${cs-4}' ${ST(.42,1.4)}/><rect x='${(x+cs*0.34).toFixed(1)}' y='${(y+cs*0.34).toFixed(1)}' width='${(cs*0.32).toFixed(1)}' height='${(cs*0.32).toFixed(1)}' ${ST(.42,1.4)}/>`;}return P(b);}
+  function rayures(s){const cs=10;let b='';for(let i=-H;i<W+H;i+=cs){b+=`<line x1='${i}' y1='0' x2='${i+H}' y2='${H}' ${ST(.4,2.4)}/>`;}return P(b);}
+  function grille(s){const cs=13;let b='';for(let x=0;x<=W;x+=cs)b+=`<line x1='${x}' y1='0' x2='${x}' y2='${H}' ${ST(.4,1.3)}/>`;for(let y=0;y<=H;y+=cs)b+=`<line x1='0' y1='${y}' x2='${W}' y2='${y}' ${ST(.4,1.3)}/>`;return P(b);}
+
+  const PATTERNS=[waves,opart,scales,ndiamonds,chevrons,triangles,cercles,anneaux,cubes,labyrinthe,treillis,zigzag,pois,croix,carres,rayures,grille];
+
+  const G=(a,b)=>`linear-gradient(150deg,${a},${b})`;
+  const COL=[G("#f59e0b","#f97316"),G("#2f6fed","#5a6bff"),G("#22a06b","#16a34a"),G("#ec4899","#f43f5e"),
+             G("#14b8a6","#22d3ee"),G("#7c5cff","#a855f7"),G("#ef4444","#f97316"),G("#0ea5e9","#3b82f6"),
+             G("#eab308","#f59e0b"),G("#d6336c","#ec4899"),G("#0d9488","#10b981"),G("#6366f1","#8b5cf6"),
+             G("#e11d48","#fb7185"),G("#0891b2","#06b6d4"),G("#65a30d","#84cc16")];
+
+  const board=document.getElementById('board');
+  for(let scn=0;scn<5;scn++){
+    const r=rng(scn*9973+17);
+    const sec=document.createElement('div'); sec.className='scn';
+    sec.innerHTML='<h2>Scénario '+(scn+1)+'</h2><div class="deck"></div>';
+    const deck=sec.querySelector('.deck');
+    let last=-1,lastc=-1;
+    for(let i=0;i<36;i++){
+      let p=Math.floor(r()*PATTERNS.length); if(p===last)p=(p+1)%PATTERNS.length; last=p;
+      let c=Math.floor(r()*COL.length); if(c===lastc)c=(c+1)%COL.length; lastc=c;
+      const card=document.createElement('div'); card.className='card';
+      card.style.background=PATTERNS[p](scn*1000+i*37+5)+', '+COL[c];
+      deck.appendChild(card);
+    }
+    board.appendChild(sec);
+  }
+</script>
+</body>
+</html>
