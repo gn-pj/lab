@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bla — formes (petites)</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Archivo",sans-serif;color:#fff;
+    background:#14132b radial-gradient(1200px 700px at 20% -10%, rgba(255,80,170,.18), transparent 60%),
+               radial-gradient(1000px 700px at 100% 0%, rgba(40,200,255,.16), transparent 55%);
+    min-height:100vh;padding:28px 18px 60px;}
+  h1{font-family:"Bricolage Grotesque";font-weight:800;font-size:30px;margin:0 0 4px;letter-spacing:-.02em;}
+  .sub{color:rgba(255,255,255,.66);font-size:14px;margin:0 0 26px;max-width:680px;}
+  .cards{display:flex;gap:15px;flex-wrap:wrap;}
+  figure{margin:0;width:124px;}
+  .card{width:124px;aspect-ratio:5/7;border-radius:16px;position:relative;overflow:hidden;
+    box-shadow:0 9px 22px rgba(0,0,0,.3);}
+  .card .pip{position:absolute;top:10px;right:11px;width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(255,255,255,.6);}
+  .card .bk{position:absolute;left:12px;bottom:10px;font-family:"Bricolage Grotesque";font-weight:800;font-size:15px;color:#fff;}
+  figcaption{margin-top:6px;font-size:12px;color:rgba(255,255,255,.6);text-align:center;}
+</style>
+</head>
+<body>
+  <h1>Bla — formes (petites)</h1>
+  <p class="sub">Trames géométriques fines et répétées. Aperçu seulement — le jeu n'est pas modifié.</p>
+  <div id="board" class="cards"></div>
+
+<script>
+  function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  const W=100,H=140;
+  const SV=(b)=>"<svg xmlns='http://www.w3.org/2000/svg' width='"+W+"' height='"+H+"' viewBox='0 0 "+W+" "+H+"'>"+b+"</svg>";
+  const P=(b)=>'url("data:image/svg+xml,'+encodeURIComponent(SV(b))+'") center/cover no-repeat';
+  const ST=(op,w)=>`fill='none' stroke='white' stroke-opacity='${op}' stroke-width='${w}' stroke-linecap='round' stroke-linejoin='round'`;
+
+  function waves(s){const rows=14,amp=2.4,k=3;let b='';for(let i=0;i<rows;i++){const y=i*(H/(rows-1));let d='M0 '+y;for(let x=0;x<=W;x+=3){d+=' L'+x+' '+(y+Math.sin(x/W*Math.PI*2*k+i*0.6)*amp).toFixed(1);}b+=`<path d='${d}' ${ST(.5,1.6)}/>`;}return P(b);}
+  function opart(s){const rows=24,amp=1.8,k=4;let b='';for(let i=0;i<rows;i++){const y=i*(H/(rows-1));let d='M0 '+y;for(let x=0;x<=W;x+=2.5){d+=' L'+x+' '+(y+Math.sin(x/W*Math.PI*2*k+i*0.5)*amp).toFixed(1);}b+=`<path d='${d}' ${ST(.42,1.3)}/>`;}return P(b);}
+  function scales(s){const cs=11,rh=cs*0.58;let b='',ry=0;for(let y=-cs;y<H+cs;y+=rh){const off=(ry%2)*(cs/2);for(let x=-cs;x<W+cs;x+=cs){b+=`<path d='M${x+off} ${y} A ${cs/2} ${cs/2} 0 0 1 ${x+off+cs} ${y}' ${ST(.5,1.5)}/>`;}ry++;}return P(b);}
+  function ndiamonds(s){const cs=15;let b='';for(let y=0;y<=H+cs;y+=cs)for(let x=0;x<=W+cs;x+=cs){[0.5,0.33,0.16].forEach(f=>{const r=cs*f;b+=`<path d='M${x} ${(y-r).toFixed(1)} L${(x+r).toFixed(1)} ${y} L${x} ${(y+r).toFixed(1)} L${(x-r).toFixed(1)} ${y} Z' ${ST(.5,1.3)}/>`;});}return P(b);}
+  function chevrons(s){const w=6,h=8;let b='';for(let cx=0;cx<=W+w;cx+=w*2){for(let y=-h;y<H+h;y+=h){b+=`<path d='M${cx} ${y} L${cx+w} ${y+h/2} L${cx} ${y+h}' ${ST(.5,1.6)}/><path d='M${cx+w} ${y} L${cx+w*2} ${y+h/2} L${cx+w} ${y+h}' ${ST(.5,1.6)}/>`;}}return P(b);}
+  function triangles(s){const cw=16,th=20;let b='',ry=0;for(let y=0;y<=H+th;y+=th){const off=(ry%2)*(cw/2);for(let x=-cw;x<W+cw;x+=cw){const apex=x+off+cw/2;b+=`<path d='M${x+off} ${y} L${apex} ${y-th} L${x+off+cw} ${y}' ${ST(.5,1.4)}/>`;for(let li=1;li<=3;li++){const yy=y-th*li/4,half=(cw/2)*(1-li/4);b+=`<line x1='${(apex-half).toFixed(1)}' y1='${yy.toFixed(1)}' x2='${(apex+half).toFixed(1)}' y2='${yy.toFixed(1)}' ${ST(.4,1.1)}/>`;}}ry++;}return P(b);}
+  function cercles(s){const cs=16;let b='',ry=0;for(let y=-cs;y<H+cs;y+=cs){const off=(ry%2)*(cs/2);for(let x=-cs;x<W+cs;x+=cs){b+=`<circle cx='${x+off}' cy='${y}' r='${(cs/2).toFixed(1)}' ${ST(.42,1.4)}/><circle cx='${x+off}' cy='${y}' r='${(cs/4).toFixed(1)}' ${ST(.42,1.4)}/>`;}ry++;}return P(b);}
+  function anneaux(s){const cs=18;let b='',ry=0;for(let y=-cs;y<H+cs;y+=cs){const off=(ry%2)*(cs/2);for(let x=-cs;x<W+cs;x+=cs){[0.46,0.3,0.14].forEach(f=>{b+=`<circle cx='${x+off}' cy='${y}' r='${(cs*f).toFixed(1)}' ${ST(.5,1.4)}/>`;});}ry++;}return P(b);}
+  function cubes(s){const u=9,dx=u*0.866;let b='',ry=0;for(let cy=0;cy<H+u*2;cy+=u*1.5){const off=(ry%2)*dx;for(let cx=-u;cx<W+u*2;cx+=dx*2){const X=cx+off,Y=cy;
+    b+=`<path d='M${X} ${(Y-u).toFixed(1)} L${(X+dx).toFixed(1)} ${(Y-u/2).toFixed(1)} L${X} ${Y} L${(X-dx).toFixed(1)} ${(Y-u/2).toFixed(1)} Z' ${ST(.4,1.1)}/>`;
+    b+=`<path d='M${(X-dx).toFixed(1)} ${(Y-u/2).toFixed(1)} L${X} ${Y} L${X} ${(Y+u).toFixed(1)} L${(X-dx).toFixed(1)} ${(Y+u/2).toFixed(1)} Z' ${ST(.4,1.1)}/>`;
+    b+=`<path d='M${(X+dx).toFixed(1)} ${(Y-u/2).toFixed(1)} L${X} ${Y} L${X} ${(Y+u).toFixed(1)} L${(X+dx).toFixed(1)} ${(Y+u/2).toFixed(1)} Z' ${ST(.4,1.1)}/>`;}ry++;}return P(b);}
+  function labyrinthe(s){const cs=17;let b='';for(let y=0;y<=H;y+=cs)for(let x=0;x<=W;x+=cs){b+=`<path d='M${x+3} ${y+cs-3} v${-(cs-6)} h${cs-6} v${cs-9} h${-(cs-12)} v${cs-15>0?cs-15:3}' ${ST(.5,1.5)}/>`;}return P(b);}
+  function treillis(s){const cs=12;let b='';for(let i=-H;i<W+H;i+=cs){b+=`<line x1='${i}' y1='0' x2='${i+H}' y2='${H}' ${ST(.38,1.2)}/><line x1='${i}' y1='0' x2='${i-H}' y2='${H}' ${ST(.38,1.2)}/>`;}return P(b);}
+  function zigzag(s){const band=11,w=8;let b='';for(let y=0;y<=H+band;y+=band){let d='M0 '+y,k=0;for(let x=0;x<=W;x+=w){d+=' L'+x+' '+(y-(k%2===0?band*0.55:0)).toFixed(1);k++;}b+=`<path d='${d}' ${ST(.5,1.7)}/>`;}return P(b);}
+  function pois(s){const cs=12;let b='',ry=0;for(let y=-cs;y<H+cs;y+=cs){const off=(ry%2)*(cs/2);for(let x=-cs;x<W+cs;x+=cs){b+=`<circle cx='${x+off}' cy='${y}' r='${(cs*0.28).toFixed(1)}' fill='white' fill-opacity='.45'/>`;}ry++;}return P(b);}
+  function croix(s){const cs=13,a=3.4;let b='',ry=0;for(let y=0;y<=H;y+=cs){const off=(ry%2)*(cs/2);for(let x=0;x<=W+cs;x+=cs){const X=x+off;b+=`<path d='M${X} ${y-a} V${y+a} M${X-a} ${y} H${X+a}' ${ST(.5,1.6)}/>`;}ry++;}return P(b);}
+  function carres(s){const cs=15;let b='';for(let y=-cs;y<H+cs;y+=cs)for(let x=-cs;x<W+cs;x+=cs){b+=`<rect x='${x+2}' y='${y+2}' width='${cs-4}' height='${cs-4}' ${ST(.42,1.4)}/><rect x='${(x+cs*0.34).toFixed(1)}' y='${(y+cs*0.34).toFixed(1)}' width='${(cs*0.32).toFixed(1)}' height='${(cs*0.32).toFixed(1)}' ${ST(.42,1.4)}/>`;}return P(b);}
+
+  const PATTERNS=[
+    ["vagues",waves],["op-art",opart],["écailles",scales],["losanges",ndiamonds],
+    ["chevrons",chevrons],["triangles",triangles],["cercles",cercles],["anneaux",anneaux],
+    ["cubes",cubes],["labyrinthe",labyrinthe],["treillis",treillis],["zigzag",zigzag],
+    ["pois",pois],["croix",croix],["carrés",carres]
+  ];
+  const G=(a,b)=>`linear-gradient(150deg,${a},${b})`;
+  const COL=[G("#f59e0b","#f97316"),G("#2f6fed","#5a6bff"),G("#22a06b","#16a34a"),G("#ec4899","#f43f5e"),
+             G("#14b8a6","#22d3ee"),G("#7c5cff","#a855f7"),G("#ef4444","#f97316"),G("#0ea5e9","#3b82f6"),
+             G("#eab308","#f59e0b"),G("#d6336c","#ec4899"),G("#0d9488","#10b981"),G("#6366f1","#8b5cf6"),
+             G("#e11d48","#fb7185"),G("#0891b2","#06b6d4"),G("#65a30d","#84cc16")];
+
+  const board=document.getElementById('board');
+  PATTERNS.forEach(([label,fn],i)=>{
+    const fig=document.createElement('figure');
+    const card=document.createElement('div'); card.className='card';
+    card.style.background=fn(i*53+9)+', '+COL[i%COL.length];
+    card.innerHTML='<span class="pip"></span><span class="bk">Jo</span>';
+    fig.appendChild(card);
+    const cap=document.createElement('figcaption'); cap.textContent=label; fig.appendChild(cap);
+    board.appendChild(fig);
+  });
+</script>
+</body>
+</html>
