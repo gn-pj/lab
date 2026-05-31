@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bla — exploration motifs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"Archivo",sans-serif;color:#fff;background:#0e0c1a;padding:26px 16px 70px;}
+  h1{font-family:"Bricolage Grotesque";font-weight:800;font-size:28px;letter-spacing:-.02em;margin-bottom:4px;}
+  .sub{color:rgba(255,255,255,.6);font-size:14px;margin-bottom:26px;max-width:60ch;}
+  section{border-radius:22px;padding:20px 18px 24px;margin-bottom:26px;}
+  .seduire{background:linear-gradient(160deg,#4a1734,#280f24);}
+  .chauffer{background:linear-gradient(160deg,#3a0c2a,#1a0512);}
+  .sec-h{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;flex-wrap:wrap;}
+  .sec-n{font-family:"Bricolage Grotesque";font-weight:800;font-size:22px;}
+  .sec-d{color:rgba(255,255,255,.65);font-size:13px;}
+  .grid{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px;}
+  .item{width:104px;}
+  .card{width:104px;aspect-ratio:5/7;border-radius:16px;overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.35);position:relative;}
+  .card .pip{position:absolute;top:8px;right:9px;width:13px;height:13px;border-radius:50%;border:2px solid rgba(255,255,255,.6);}
+  .lbl{font-size:11px;color:rgba(255,255,255,.6);margin-top:6px;text-align:center;}
+  @media(max-width:520px){.item,.card{width:30vw;}}
+</style>
+</head>
+<body>
+  <h1>Bla — exploration de motifs</h1>
+  <p class="sub">Pleine carte, plus audacieux. Séduire : organique (veines, fluides, vagues, pétales). Chauffer : burlesque / années folles (éventails Art déco, arabesques, écailles, chevrons) en trait doré sur pourpre &amp; sanguin. Chaque motif en 3 teintes du thème. Aperçu seulement.</p>
+  <div id="board"></div>
+
+<script>
+  function sv(inner){return "url(\"data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='100' height='140' viewBox='0 0 100 140'>"+inner+"</svg>")+"\") center/cover no-repeat";}
+  function S(c,o,w){return "fill='none' stroke='"+c+"' stroke-opacity='"+o+"' stroke-width='"+w+"' stroke-linecap='round' stroke-linejoin='round'";}
+  function F(c,o){return "fill='"+c+"' fill-opacity='"+o+"' stroke='none'";}
+  function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  const G=(a,b)=>"linear-gradient(150deg,"+a+","+b+")";
+  const cream="#fff4ec", gold="#f4d9a6";
+
+  /* ===== SÉDUIRE — organique ===== */
+  function veins(){let b='';const rows=21;for(let r=0;r<rows;r++){const y=r*(140/(rows-1));const amp=2.4+(r%3)*1.3,k=2+(r%4)*0.55;let d='M0 '+y.toFixed(1);for(let x=0;x<=100;x+=2){d+=' L'+x+' '+(y+Math.sin(x/100*Math.PI*2*k+r*0.8)*amp).toFixed(1);}b+="<path d='"+d+"' "+S(cream,.5,1.6)+"/>";}return sv(b);}
+  function fluid(){const r=rng(7);let b='';const drop="M0 -7 C5.5 -2 5.5 5 0 9 C-5.5 5 -5.5 -2 0 -7 Z";for(let gy=0;gy<6;gy++)for(let gx=0;gx<5;gx++){const cx=gx*22+11+(r()*8-4),cy=gy*24+12+(r()*8-4),rot=Math.floor(r()*360),sc=(0.75+r()*0.7).toFixed(2);b+="<g transform='translate("+cx.toFixed(1)+" "+cy.toFixed(1)+") rotate("+rot+") scale("+sc+")'><path d='"+drop+"' "+F(cream,.42)+"/></g>";}return sv(b);}
+  function ogee(){let b='',ry=0;const cs=24;for(let y=-cs;y<140+cs;y+=cs){const off=(ry%2)*(cs/2);for(let x=-cs;x<100+cs;x+=cs){[11,7.5,4].forEach(rr=>{b+="<circle cx='"+(x+off)+"' cy='"+y+"' r='"+rr+"' "+S(cream,.5,1.5)+"/>";});}ry++;}return sv(b);}
+  function petals(){const r=rng(13);const fl="<circle cx='0' cy='-7' r='4.6'/><circle cx='0' cy='7' r='4.6'/><circle cx='-7' cy='0' r='4.6'/><circle cx='7' cy='0' r='4.6'/><circle cx='0' cy='0' r='3'/>";let b='';for(let gy=0;gy<6;gy++)for(let gx=0;gx<5;gx++){const cx=gx*22+11+(r()*6-3),cy=gy*24+12+(r()*6-3),rot=Math.floor(r()*90),sc=(0.7+r()*0.5).toFixed(2);b+="<g transform='translate("+cx.toFixed(1)+" "+cy.toFixed(1)+") rotate("+rot+") scale("+sc+")' "+F(cream,.4)+">"+fl+"</g>";}return sv(b);}
+  function ripples(){let b='';for(let cy=140;cy>-20;cy-=11){b+="<path d='M-12 "+cy+" Q50 "+(cy-24)+" 112 "+cy+"' "+S(cream,.5,1.6)+"/>";}return sv(b);}
+
+  /* ===== CHAUFFER — burlesque / Art déco ===== */
+  function decoFan(){let b='',ry=0;const cw=20,ch=26;for(let y=-ch;y<140+ch;y+=ch){const off=(ry%2)*(cw/2);for(let x=-cw;x<100+cw;x+=cw){const X=x+off,apex=X+cw/2;b+="<path d='M"+X+" "+(y+ch)+" L"+apex+" "+y+" L"+(X+cw)+" "+(y+ch)+"' "+S(gold,.6,1.5)+"/>";for(let li=1;li<=4;li++){const yy=y+ch*li/5,half=(cw/2)*(li/5);b+="<line x1='"+(apex-half).toFixed(1)+"' y1='"+yy.toFixed(1)+"' x2='"+(apex+half).toFixed(1)+"' y2='"+yy.toFixed(1)+"' "+S(gold,.5,1.1)+"/>";}}ry++;}return sv(b);}
+  function arabesque(){let b='';const cs=25;for(let y=-cs;y<140+cs;y+=cs)for(let x=-cs;x<100+cs;x+=cs){const cx=x+cs/2,cy=y+cs/2;b+="<path d='M"+x+" "+cy+" Q"+cx+" "+(y-cs*0.18)+" "+(x+cs)+" "+cy+" Q"+cx+" "+(y+cs*1.18)+" "+x+" "+cy+" Z' "+S(gold,.55,1.3)+"/>";b+="<path d='M"+cx+" "+y+" Q"+(x-cs*0.18)+" "+cy+" "+cx+" "+(y+cs)+" Q"+(x+cs*1.18)+" "+cy+" "+cx+" "+y+" Z' "+S(gold,.4,1.1)+"/>";b+="<circle cx='"+cx+"' cy='"+cy+"' r='2.4' "+F(gold,.5)+"/>";}return sv(b);}
+  function scales(){let b='',ry=0;const cs=19,rh=cs*0.6;for(let y=-cs;y<140+cs;y+=rh){const off=(ry%2)*(cs/2);for(let x=-cs;x<100+cs;x+=cs){const X=x+off;b+="<path d='M"+X+" "+y+" A "+(cs/2)+" "+(cs/2)+" 0 0 1 "+(X+cs)+" "+y+"' "+S(gold,.58,1.5)+"/>";[0.62,0.3].forEach(f=>{const rr=(cs/2)*f;b+="<path d='M"+(X+cs/2-rr).toFixed(1)+" "+y+" A "+rr.toFixed(1)+" "+rr.toFixed(1)+" 0 0 1 "+(X+cs/2+rr).toFixed(1)+" "+y+"' "+S(gold,.45,1)+"/>";});}ry++;}return sv(b);}
+  function chevron(){let b='';const w=12,h=11;for(let cx=-w;cx<100+w;cx+=w){for(let y=-h;y<140+h;y+=h){b+="<path d='M"+cx+" "+(y+h)+" L"+(cx+w/2)+" "+y+" L"+(cx+w)+" "+(y+h)+"' "+S(gold,.55,1.7)+"/>";}}return sv(b);}
+  function lattice(){let b='';const cs=17;for(let y=-cs;y<140+cs;y+=cs)for(let x=-cs;x<100+cs;x+=cs){const cx=x+cs/2,cy=y+cs/2;b+="<path d='M"+cx+" "+y+" L"+(x+cs)+" "+cy+" L"+cx+" "+(y+cs)+" L"+x+" "+cy+" Z' "+S(gold,.5,1.3)+"/>";b+="<path d='M"+cx+" "+(cy-3)+" L"+cx+" "+(cy+3)+" M"+(cx-3)+" "+cy+" L"+(cx+3)+" "+cy+"' "+S(gold,.45,1.1)+"/>";}return sv(b);}
+
+  const SED_COLS=[G("#ff7aa2","#ff4d6d"),G("#f472b6","#db2777"),G("#c084fc","#f472b6"),G("#fb7185","#e11d48"),G("#ffa07a","#ff6f91")];
+  const CHA_COLS=[G("#6a0f49","#2b0a3d"),G("#8b0a2e","#3d0a1e"),G("#a01a4f","#4a0f3a"),G("#7a0b2e","#2d0512"),G("#5a1a6e","#2a0a3a")];
+
+  const SED=[["Veines",veins],["Fluides",fluid],["Ogives",ogee],["Pétales",petals],["Ondes",ripples]];
+  const CHA=[["Éventail déco",decoFan],["Arabesques",arabesque],["Écailles",scales],["Chevrons",chevron],["Treillis",lattice]];
+
+  function build(title,desc,cls,defs,cols){
+    const sec=document.createElement('section'); sec.className=cls;
+    sec.innerHTML="<div class='sec-h'><span class='sec-n'>"+title+"</span><span class='sec-d'>"+desc+"</span></div><div class='grid'></div>";
+    const grid=sec.querySelector('.grid');
+    defs.forEach((d,di)=>{
+      for(let ci=0;ci<3;ci++){
+        const col=cols[(di+ci)%cols.length];
+        const it=document.createElement('div'); it.className='item';
+        it.innerHTML="<div class='card'><span class='pip'></span></div><div class='lbl'>"+d[0]+"</div>";
+        it.querySelector('.card').style.background=d[1]()+', '+col;
+        grid.appendChild(it);
+      }
+    });
+    document.getElementById('board').appendChild(sec);
+  }
+  build("🥰 Séduire","organique","seduire",SED,SED_COLS);
+  build("🥵 Chauffer","burlesque / années folles","chauffer",CHA,CHA_COLS);
+</script>
+</body>
+</html>
