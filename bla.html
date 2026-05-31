@@ -493,7 +493,7 @@
   const N=ALL.length, AMP=44, TILT=13;
   const MAXVIS=Math.ceil(N/1.5);           /* éventail allégé : on n'affiche jamais plus de N/1.5 cartes */
   const KFIX=2*Math.PI/70;                 /* sine wavelength ≈ 70vw — cards ride a fixed wave */
-  let curPlayer=0, curEl=null, animating=false, pan=0, vis=N;
+  let curPlayer=0, curEl=null, curQid=null, animating=false, pan=0, vis=N;
 
   /* spacing between cards (vw): roomy when few remain, compressed when many — fan ≤ ~360vw */
   function spacingFor(v){ return v<=1 ? 0 : Math.min(26, 360/(v-1)); }
@@ -502,9 +502,14 @@
   /* the farandole shows exactly as many cards as the current player has questions left */
   function computeVis(){
     const pl=players[curPlayer];
-    let r = pl._q ? (pl._q.length-pl._qp) : ALL.length;
-    if(r<=0){ pl._q=buildPile(); pl._qp=0; r=ALL.length; }   /* pile épuisée → on rebrasse (même amorce douce) */
-    vis=Math.max(1, Math.min(r, MAXVIS));
+    if(!pl._q || pl._q.length===0){ pl._q=buildPile(); }    /* nouveau joueur / pile épuisée → 36 questions, amorce douce */
+    vis=Math.max(1, Math.min(pl._q.length, MAXVIS));
+    bindFan();
+  }
+  /* relie chaque carte visible à SA question (position dans la pile restante) */
+  function bindFan(){
+    const q=players[curPlayer] && players[curPlayer]._q; if(!q) return;
+    for(let i=0;i<cards.length;i++){ cards[i]._qid = (i<vis && i<q.length) ? q[i] : null; }
   }
 
   /* finite fan: cards on a fixed sine, centred; pan slides them (no loop, real start/end) */
@@ -533,7 +538,8 @@
     const used=new Set(head);
     return head.concat(shuf(ALL.map((_,i)=>i).filter(i=>!used.has(i))));
   }
-  function nextQ(p){ const pl=players[p]; if(!pl._q||pl._qp>=pl._q.length){ pl._q=buildPile(); pl._qp=0; } return ALL[pl._q[pl._qp++]]; }
+  /* consomme la question d'une carte précise (retirée de la pile restante) */
+  function takeQ(qid){ const pl=players[curPlayer]; const k=pl._q?pl._q.indexOf(qid):-1; if(k>=0) pl._q.splice(k,1); }
 
   /* the deck "belongs" to whoever's turn it is → their name on every back */
   function setBacks(){ const nm = groupMode ? 'Bla' : (players[curPlayer]?players[curPlayer].name:''); cards.forEach(el=>{ const b=el.querySelector('.bk'); if(b) b.textContent=nm; }); }
@@ -663,7 +669,10 @@
   /* the touched card leaves the wave toward the viewer and flips */
   function pullOut(el){
     if(animating) return; animating=true;
-    const person=players[curPlayer], q=nextQ(curPlayer), raw=SETS[q.serie][q.idx];
+    const person=players[curPlayer];
+    let qid=el._qid;
+    if(qid==null){ const pl=players[curPlayer]; if(!pl._q||!pl._q.length) pl._q=buildPile(); qid=pl._q[0]; }
+    const q=ALL[qid], raw=SETS[q.serie][q.idx];
     let partner=null;
     if(/\{P\}|\{deP\}|\{p:/.test(raw) && players.length>1){
       let pj; do{pj=rand(players.length);}while(pj===curPlayer); partner=players[pj];
@@ -675,7 +684,7 @@
       const tilt=(Math.random()*8-4).toFixed(2);   /* léger angle imparfait, plus naturel */
       el.style.transform='translate(-50%,-50%) translateY(-8px) translateZ(78px) scale(1.04) rotate('+tilt+'deg)';
       deck.classList.add('frozen','presenting');
-      curEl=el;
+      curEl=el; curQid=qid;
       $('prompt').style.display='none';
       $('actions').classList.add('show');
       setTimeout(()=>{animating=false;},700);
@@ -691,6 +700,7 @@
   function putBack(){
     if(!curEl) return;
     clearTimer();
+    if(curQid!=null){ takeQ(curQid); curQid=null; }   /* question validée → retirée de la pile */
     curEl.classList.remove('out','flipped'); curEl=null;
     deck.classList.remove('frozen','presenting');
     $('actions').classList.remove('show');
@@ -703,7 +713,7 @@
   /* visual shuffle THROUGH THE CENTRE: cards gather inward (full size), then spread back out */
   function shuffleByCenter(){
     animating=true; cancelInertia(); pan=0;
-    clearTimer();
+    clearTimer(); curQid=null;
     if(curEl){ curEl.classList.remove('out','flipped'); curEl=null; }
     deck.classList.remove('frozen','presenting');
     deck.classList.add('piling');                 /* soften shadows while stacked */
@@ -746,7 +756,7 @@
   }
 
   $('again').onclick=()=>{ if(animating) return; putBack(); };                                   /* même joueur : on garde le tas */
-  $('next').onclick=()=>{ if(animating) return; curPlayer=(curPlayer+1)%players.length; shuffleByCenter(); }; /* joueur suivant : brassage par le centre */
+  $('next').onclick=()=>{ if(animating) return; if(curQid!=null){ takeQ(curQid); curQid=null; } curPlayer=(curPlayer+1)%players.length; shuffleByCenter(); }; /* valide la question puis joueur suivant */
 
   /* ---------- finite left/right drag, with a soft bounce at the ends ---------- */
   const area=document.querySelector('.deck-area');
