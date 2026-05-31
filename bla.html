@@ -136,6 +136,16 @@
   @keyframes wordIn{to{opacity:1;transform:none;}}
   .ffoot{padding:11px;font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--muted);
     text-align:center;border-top:1px solid #eef0f4;}
+  .ftimer{display:none;align-items:center;gap:10px;margin:0 16px 6px;padding:7px 10px;border-radius:14px;background:#f3f4f7;}
+  .ftimer .tbtn{flex:none;width:30px;height:30px;border-radius:50%;border:none;background:var(--ink);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+  .ftimer.run .tbtn{background:#e11d48;}
+  .ftimer.done .tbtn{background:#16a34a;}
+  .ftimer .ttime{font-family:"Bricolage Grotesque";font-weight:800;font-size:16px;color:var(--ink);min-width:42px;text-align:center;font-variant-numeric:tabular-nums;}
+  .ftimer.done .ttime{color:#16a34a;}
+  .ftimer .tbar{flex:1;height:5px;border-radius:3px;background:#e3e6eb;overflow:hidden;}
+  .ftimer .tbar i{display:block;height:100%;width:0;background:var(--ink);transition:width .9s linear;}
+  .ftimer.run .tbar i{background:#e11d48;}
+  .ftimer.done .tbar i{background:#16a34a;}
 
   /* bottom bar */
   .bottom{padding:18px 20px calc(20px + env(safe-area-inset-bottom));z-index:6;
@@ -406,10 +416,14 @@
           '<div class="face front">'+
             '<div class="fhead"><span class="fserie"></span><span class="fname"></span></div>'+
             '<div class="fbody"><p class="fq"></p></div>'+
+            '<div class="ftimer"><button class="tbtn" type="button" aria-label="Minuteur"></button><span class="ttime"></span><span class="tbar"><i></i></span></div>'+
             '<div class="ffoot"></div>'+
           '</div>'+
         '</div></div>';
       el.querySelector('.floater').style.animationDelay=(-i*0.55)+'s';
+      const tw=el.querySelector('.ftimer');
+      tw.addEventListener('pointerdown',e=>e.stopPropagation());
+      tw.addEventListener('click',e=>{e.stopPropagation();toggleTimer();});
       deck.appendChild(el); cards.push(el);
     }
     built=true;
@@ -537,11 +551,58 @@
     el.querySelector('.fserie').textContent='Série '+ROMAN[q.serie];
     el.querySelector('.fname').textContent=person.name;
     el.querySelector('.ffoot').textContent='Question '+q.n+' / 36';
-    renderQ(el, resolve(SETS[q.serie][q.idx], person.fem, partner));
+    const txt=resolve(SETS[q.serie][q.idx], person.fem, partner);
+    renderQ(el, txt);
+    setupTimer(el, detectDuration(txt));
+  }
+
+  /* ---------- timer intégré (questions chronométrées) ---------- */
+  const NUMW={'un':1,'une':1,'deux':2,'trois':3,'quatre':4,'cinq':5,'six':6,'sept':7,'huit':8,'neuf':9,'dix':10,'douze':12,'quinze':15,'vingt':20,'trente':30,'quarante':40,'cinquante':50,'soixante':60};
+  function detectDuration(text){
+    const t=text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const m=t.match(/(\d{1,3}|une?|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|douze|quinze|vingt|trente|quarante|cinquante|soixante)\s*(minute|seconde)/);
+    if(!m) return 0;
+    let n = NUMW[m[1]]!==undefined ? NUMW[m[1]] : parseInt(m[1],10);
+    if(!n||isNaN(n)) return 0;
+    return m[2]==='minute' ? n*60 : n;
+  }
+  const ICO_PLAY='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+  const ICO_PAUSE='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+  const ICO_RESET='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></svg>';
+  let tmr=null, tRemain=0, tTotal=0;
+  const fmtT=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+  function clearTimer(){ if(tmr){clearInterval(tmr);tmr=null;} }
+  function renderTimer(el,running){
+    const wrap=el&&el.querySelector('.ftimer'); if(!wrap) return;
+    wrap.querySelector('.ttime').textContent=fmtT(tRemain);
+    wrap.querySelector('.tbar i').style.width=(tTotal?100*(1-tRemain/tTotal):0).toFixed(1)+'%';
+    const done=tRemain<=0;
+    wrap.classList.toggle('run',running&&!done);
+    wrap.classList.toggle('done',done);
+    wrap.querySelector('.tbtn').innerHTML = done?ICO_RESET : (running?ICO_PAUSE:ICO_PLAY);
+  }
+  function setupTimer(el,secs){
+    clearTimer();
+    const wrap=el&&el.querySelector('.ftimer'); if(!wrap) return;
+    if(!secs){ wrap.style.display='none'; return; }
+    wrap.style.display='flex';
+    tTotal=secs; tRemain=secs; renderTimer(el,false);
+  }
+  function toggleTimer(){
+    if(!curEl) return; const el=curEl;
+    if(tRemain<=0){ tRemain=tTotal; renderTimer(el,false); return; }   /* reset */
+    if(tmr){ clearTimer(); renderTimer(el,false); return; }            /* pause */
+    tmr=setInterval(()=>{
+      tRemain--;
+      if(tRemain<=0){ tRemain=0; clearTimer(); renderTimer(el,false); if(navigator.vibrate)navigator.vibrate([120,60,120]); }
+      else renderTimer(el,true);
+    },1000);
+    renderTimer(el,true);
   }
 
   /* slide a card back into the farandole, at its own depth (or hide if beyond the pile) */
   function sendBack(el){
+    clearTimer();
     el.classList.remove('out','flipped');
     const i=cards.indexOf(el);
     if(i<vis){ const p=poseOf(i); el.style.transform=p.t; el.style.zIndex=p.z; el.style.opacity=''; }
@@ -578,6 +639,7 @@
   /* the open card slides back into the deck — same player, pile just shrank by one */
   function putBack(){
     if(!curEl) return;
+    clearTimer();
     curEl.classList.remove('out','flipped'); curEl=null;
     deck.classList.remove('frozen','presenting');
     $('actions').classList.remove('show');
@@ -590,6 +652,7 @@
   /* visual shuffle THROUGH THE CENTRE: cards gather inward (full size), then spread back out */
   function shuffleByCenter(){
     animating=true; cancelInertia(); pan=0;
+    clearTimer();
     if(curEl){ curEl.classList.remove('out','flipped'); curEl=null; }
     deck.classList.remove('frozen','presenting');
     deck.classList.add('piling');                 /* soften shadows while stacked */
