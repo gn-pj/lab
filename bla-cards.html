@@ -1,99 +1,67 @@
-<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bla — dos Bicycle (Chauffer)</title>
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bla — Chauffer : dos Bicycle variés</title>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
-<style>
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:"Archivo",sans-serif;color:#fff;background:#13070a;padding:26px 16px 70px;}
-  h1{font-family:"Bricolage Grotesque";font-weight:800;font-size:26px;letter-spacing:-.02em;margin-bottom:4px;}
-  .sub{color:rgba(255,255,255,.62);font-size:14px;margin-bottom:22px;max-width:62ch;line-height:1.5;}
-  .grid{display:flex;flex-wrap:wrap;gap:16px;}
-  .item{width:150px;}
-  /* white playing-card border, baked structurally */
-  .card{width:150px;aspect-ratio:5/7;border-radius:14px;background:#fff;padding:7px;
-        box-shadow:0 12px 28px rgba(0,0,0,.5);}
-  .art{width:100%;height:100%;border-radius:9px;overflow:hidden;}
-  .lbl{font-size:11.5px;color:rgba(255,255,255,.62);margin-top:7px;text-align:center;}
-  @media(max-width:520px){.item,.card{width:43vw;}}
-</style></head>
-<body>
-  <h1>🥵 Chauffer — dos Bicycle</h1>
-  <p class="sub">Dos de carte ornementé : bordure blanche, fond diapré, cadre à perles, médaillon rayonnant, volutes en miroir. Plusieurs gammes — dis-moi laquelle tu veux (le jeu en piochera plusieurs au hasard).</p>
-  <div id="board" class="grid"></div>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Archivo,sans-serif;color:#fff;background:#13070a;padding:26px 16px 70px}
+h1{font-family:"Bricolage Grotesque";font-weight:800;font-size:25px;letter-spacing:-.02em;margin-bottom:4px}
+.sub{color:rgba(255,255,255,.6);font-size:14px;margin-bottom:22px;max-width:60ch;line-height:1.5}
+.grid{display:flex;flex-wrap:wrap;gap:16px}.item{width:140px}
+.card{width:140px;aspect-ratio:5/7;border-radius:14px;background:#fff;padding:7px;box-shadow:0 12px 28px rgba(0,0,0,.5)}
+.art{width:100%;height:100%;border-radius:9px;overflow:hidden}
+@media(max-width:520px){.item,.card{width:43vw}}</style></head><body>
+<h1>🥵 Chauffer — dos Bicycle variés</h1>
+<p class="sub">Chaque carte a une structure différente : médaillon (roue, rosace, étoile, fleuron, treillis), fond, volutes et cadre changent. Bordure blanche de carte à jouer.</p>
+<div id="board" class="grid"></div>
 <script>
+/* ===== shared ===== */
+function oRng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function svURL(W,H,body){var s="<svg xmlns='http://www.w3.org/2000/svg' width='"+W+"' height='"+H+"' viewBox='0 0 "+W+" "+H+"'>"+body+"</svg>";return "url(\"data:image/svg+xml,"+encodeURIComponent(s)+"\") center/cover no-repeat";}
+var F1=n=>Number(n).toFixed(1);
+
+/* ===== SÉDUIRE — peaux d'animaux (SVG vectoriel) ===== */
+function aZebra(W,H,F,K,rng){let b="<rect width='"+W+"' height='"+H+"' fill='"+F+"'/>";let x=-8;while(x<W+8){const w=9+rng()*17,amp=3+rng()*7,k=(1.4+rng()*2.1)*Math.PI/H,ph=rng()*6.28,sk=(rng()-0.5)*0.5,N=18;let d="";for(let i=0;i<=N;i++){const y=i/N*H,xe=x+Math.sin(y*k+ph)*amp+y*sk;d+=(i?"L":"M")+F1(xe)+" "+F1(y);}for(let i=N;i>=0;i--){const y=i/N*H,xe=x+w+Math.sin(y*k+ph+0.7)*amp+y*sk;d+="L"+F1(xe)+" "+F1(y);}d+="Z";b+="<path d='"+d+"' fill='"+K+"'/>";x+=w+7+rng()*17;}return b;}
+function aTiger(W,H,F,K,rng){let b="<rect width='"+W+"' height='"+H+"' fill='"+F+"'/>";let x=-6;while(x<W+8){const w0=5+rng()*8,amp=2+rng()*5,k=(2+rng()*2.6)*Math.PI/H,ph=rng()*6.28,dir=rng()<0.5?1:-1,N=18;let d="";for(let i=0;i<=N;i++){const y=i/N*H,t=dir>0?i/N:1-i/N,xe=x+Math.sin(y*k+ph)*amp;d+=(i?"L":"M")+F1(xe)+" "+F1(y);}for(let i=N;i>=0;i--){const y=i/N*H,t=dir>0?i/N:1-i/N,w=w0*(0.15+0.85*t),xe=x+w+Math.sin(y*k+ph)*amp;d+="L"+F1(xe)+" "+F1(y);}d+="Z";b+="<path d='"+d+"' fill='"+K+"'/>";x+=w0+8+rng()*13;}return b;}
+function aGiraffe(W,H,F,K,rng){const C=4,Rw=6;const P=[];for(let r=0;r<=Rw;r++){P[r]=[];for(let c=0;c<=C;c++){P[r][c]=[c*W/C+(rng()-0.5)*(W/C)*0.62,r*H/Rw+(rng()-0.5)*(H/Rw)*0.62];}}let b="<rect width='"+W+"' height='"+H+"' fill='"+F+"'/>";for(let r=0;r<Rw;r++)for(let c=0;c<C;c++){const q=[P[r][c],P[r][c+1],P[r+1][c+1],P[r+1][c]];const cx=(q[0][0]+q[1][0]+q[2][0]+q[3][0])/4,cy=(q[0][1]+q[1][1]+q[2][1]+q[3][1])/4;const ins=q.map(p=>[p[0]+(cx-p[0])*0.10,p[1]+(cy-p[1])*0.10]);let d="M"+F1(ins[0][0])+" "+F1(ins[0][1]);for(let i=1;i<4;i++)d+="L"+F1(ins[i][0])+" "+F1(ins[i][1]);d+="Z";b+="<path d='"+d+"' fill='"+K+"'/>";}return b;}
+function aLeopard(W,H,F,K,rng){let b="<rect width='"+W+"' height='"+H+"' fill='"+F+"'/>";const sx=W/4.2,sy=H/5.6;for(let gy=-1;gy<6;gy++)for(let gx=-1;gx<5;gx++){const cx=gx*sx+sx*0.5+(rng()-0.5)*sx*0.7,cy=gy*sy+sy*0.5+(rng()-0.5)*sy*0.7;const rr=6+rng()*5,seg=5+Math.floor(rng()*3),rot=rng()*6.28;let g="<g fill='none' stroke='"+K+"' stroke-width='2.4' stroke-linecap='round'>";for(let s=0;s<seg;s++){const a0=rot+s/seg*6.28+0.25,a1=a0+6.28/seg-0.7;const x0=cx+Math.cos(a0)*rr,y0=cy+Math.sin(a0)*rr,x1=cx+Math.cos(a1)*rr,y1=cy+Math.sin(a1)*rr;g+="<path d='M"+F1(x0)+" "+F1(y0)+" A "+F1(rr)+" "+F1(rr)+" 0 0 1 "+F1(x1)+" "+F1(y1)+"'/>";}g+="</g>";if(rng()<0.6)g+="<circle cx='"+F1(cx)+"' cy='"+F1(cy)+"' r='1.6' fill='"+K+"'/>";b+=g;}return b;}
+function aCow(W,H,F,K,rng){let b="<rect width='"+W+"' height='"+H+"' fill='"+F+"'/>";const n=4+Math.floor(rng()*3);for(let i=0;i<n;i++){const cx=rng()*W,cy=rng()*H,base=22+rng()*30,M=18;let d="";for(let j=0;j<=M;j++){const a=j/M*6.283,rr=base*(0.6+0.5*Math.sin(a*2+i)+0.35*(rng()-0.5));const x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr*1.15;d+=(j?"L":"M")+F1(x)+" "+F1(y);}d+="Z";b+="<path d='"+d+"' fill='"+K+"'/>";}return b;}
+function aPython(W,H,F,K,rng){let b="<rect width='"+W+"' height='"+H+"' fill='"+F+"'/>";const cw=20,ch=15;let ry=0;for(let y=-ch;y<H+ch;y+=ch){const off=(ry%2)*(cw/2);for(let x=-cw;x<W+cw;x+=cw){const X=x+off,Y=y,t=0.35+rng()*0.5;b+="<path d='M"+F1(X)+" "+F1(Y-ch*0.62)+" L"+F1(X+cw*0.5)+" "+F1(Y)+" L"+F1(X)+" "+F1(Y+ch*0.62)+" L"+F1(X-cw*0.5)+" "+F1(Y)+" Z' fill='"+K+"' fill-opacity='"+t.toFixed(2)+"' stroke='"+K+"' stroke-width='1'/>";}ry++;}return b;}
+function aSpots(W,H,F,K,rng){let b="<rect width='"+W+"' height='"+H+"' fill='"+F+"'/>";const n=70;for(let i=0;i<n;i++){const x=rng()*W,y=rng()*H,rx=2+rng()*5,ry2=rx*(0.7+rng()*0.6),rot=rng()*180;b+="<ellipse cx='"+F1(x)+"' cy='"+F1(y)+"' rx='"+F1(rx)+"' ry='"+F1(ry2)+"' transform='rotate("+F1(rot)+" "+F1(x)+" "+F1(y)+")' fill='"+K+"'/>";}return b;}
+function skinMotif(seed){const forms=[aZebra,aTiger,aGiraffe,aLeopard,aCow,aPython,aSpots];const ways=[['#2a0f24','#ff7aa2'],['#33122c','#c084fc'],['#1f0a1c','#ff9ebb'],['#2a0f24','#e9b3ff']];const r=oRng(seed*5+2);const f=forms[Math.floor(r()*forms.length)];const w=ways[Math.floor(r()*ways.length)];return svURL(200,280,f(200,280,w[0],w[1],r));}
+
+/* ===== CHAUFFER — dos Bicycle DIVERSIFIÉ (structure variable par graine) ===== */
 function bicycleBack(field, ink, seed){
-  const W=250,H=350, CX=125, CY=175;
-  const r2=(n)=>Number(n).toFixed(1);
-  function quad(inner){ // 4-fold mirror around centre
-    return "<g transform='translate("+CX+" "+CY+")'>"
-      +"<g>"+inner+"</g><g transform='scale(-1,1)'>"+inner+"</g>"
-      +"<g transform='scale(1,-1)'>"+inner+"</g><g transform='scale(-1,-1)'>"+inner+"</g></g>";
-  }
-  // main filigree arm (one diagonal quadrant, centre-relative, +x +y)
-  const arm="<g fill='none' stroke='"+ink+"' stroke-width='1.5' stroke-linecap='round'>"
-    +"<path d='M16 12 C 58 20 96 58 104 116'/>"
-    +"<path d='M40 16 C 54 38 50 62 34 78'/>"
-    +"<path d='M34 78 C 26 88 15 84 14 74 C 24 78 28 69 22 62'/>"
-    +"</g>"
-    +"<path d='M104 116 C 120 118 126 104 117 95 C 133 100 131 126 106 128 Z' fill='"+ink+"' fill-opacity='0.88'/>"
-    +"<ellipse cx='68' cy='42' rx='6' ry='10.5' transform='rotate(42 68 42)' fill='"+ink+"' fill-opacity='0.82'/>"
-    +"<circle cx='90' cy='80' r='2.4' fill='"+ink+"'/>";
-  // central medallion
-  function medallion(){
-    const R=46; let s="<g transform='translate("+CX+" "+CY+")'>";
-    s+="<g fill='none' stroke='"+ink+"' stroke-width='1.3'><circle r='"+R+"'/><circle r='"+r2(R*0.9)+"'/><circle r='"+r2(R*0.4)+"'/></g>";
-    let rays="<g fill='none' stroke='"+ink+"' stroke-width='0.9'>";const N=44;
-    for(let i=0;i<N;i++){const a=i/N*6.2832;rays+="<line x1='"+r2(Math.cos(a)*R*0.42)+"' y1='"+r2(Math.sin(a)*R*0.42)+"' x2='"+r2(Math.cos(a)*R*0.86)+"' y2='"+r2(Math.sin(a)*R*0.86)+"'/>";}
-    rays+="</g>";
-    let pet="<g fill='"+ink+"'>";const P=16;
-    for(let i=0;i<P;i++){const a=i/P*6.2832,x=Math.cos(a)*R*0.28,y=Math.sin(a)*R*0.28;pet+="<ellipse cx='"+r2(x)+"' cy='"+r2(y)+"' rx='2.1' ry='4.6' transform='rotate("+r2(a*57.3+90)+" "+r2(x)+" "+r2(y)+")'/>";}
-    pet+="<circle r='3.2'/></g>";
-    return s+rays+pet+"</g>";
-  }
-  // border frame + beads + corner fleurons
-  function frame(){
-    let s="<g fill='none' stroke='"+ink+"'>";
-    s+="<rect x='12' y='12' width='226' height='326' rx='12' stroke-width='1.6'/>";
-    s+="<rect x='18' y='18' width='214' height='314' rx='9' stroke-width='0.9'/>";
-    s+="</g>";
-    // beads along the 15px-inset rectangle
-    let bd="<g fill='"+ink+"'>";const bx=15,by=15,bw=220,bh=320,sp=11;
-    for(let x=bx+sp;x<bx+bw-sp/2;x+=sp){bd+="<circle cx='"+r2(x)+"' cy='"+by+"' r='1.5'/><circle cx='"+r2(x)+"' cy='"+(by+bh)+"' r='1.5'/>";}
-    for(let y=by+sp;y<by+bh-sp/2;y+=sp){bd+="<circle cx='"+bx+"' cy='"+r2(y)+"' r='1.5'/><circle cx='"+(bx+bw)+"' cy='"+r2(y)+"' r='1.5'/>";}
-    bd+="</g>";
-    // corner fleurons
-    const corners=[[24,24,1,1],[226,24,-1,1],[24,326,1,-1],[226,326,-1,-1]];
-    let fl="";
-    corners.forEach(c=>{fl+="<g transform='translate("+c[0]+" "+c[1]+") scale("+c[2]+" "+c[3]+")' fill='none' stroke='"+ink+"' stroke-width='1.2'><path d='M0 14 C 0 4 4 0 14 0'/><path d='M4 18 C 14 18 18 14 18 4'/><circle cx='9' cy='9' r='1.8' fill='"+ink+"'/></g>";});
-    return s+bd+fl;
-  }
-  // light diamond diaper ground, clipped inside frame
-  function ground(){
-    let g="<clipPath id='cl"+seed+"'><rect x='22' y='22' width='206' height='306' rx='7'/></clipPath>";
-    let l="<g clip-path='url(#cl"+seed+")' stroke='"+ink+"' stroke-opacity='0.22' stroke-width='0.6'>";
-    const sp=12;
-    for(let i=-H;i<W+H;i+=sp){l+="<line x1='"+i+"' y1='0' x2='"+(i+H)+"' y2='"+H+"'/><line x1='"+i+"' y1='0' x2='"+(i-H)+"' y2='"+H+"'/>";}
-    l+="</g>";
-    return g+l;
-  }
-  const inner="<rect width='"+W+"' height='"+H+"' fill='"+field+"'/>"+ground()+quad(arm)+medallion()+frame();
-  const svg="<svg xmlns='http://www.w3.org/2000/svg' width='"+W+"' height='"+H+"' viewBox='0 0 "+W+" "+H+"'>"+inner+"</svg>";
-  return "url(\"data:image/svg+xml,"+encodeURIComponent(svg)+"\") center/cover no-repeat";
+  const W=250,H=350,CX=125,CY=175,R=oRng(seed*9+7);
+  const pick=a=>a[Math.floor(R()*a.length)];
+  function quad(inner){return "<g transform='translate("+CX+" "+CY+")'><g>"+inner+"</g><g transform='scale(-1,1)'>"+inner+"</g><g transform='scale(1,-1)'>"+inner+"</g><g transform='scale(-1,-1)'>"+inner+"</g></g>";}
+  /* medallions */
+  function medWheel(){const Rr=42+R()*8,N=32+Math.floor(R()*22),P=12+Math.floor(R()*7);let s="<g transform='translate("+CX+" "+CY+")'><g fill='none' stroke='"+ink+"' stroke-width='1.3'><circle r='"+F1(Rr)+"'/><circle r='"+F1(Rr*0.9)+"'/><circle r='"+F1(Rr*0.4)+"'/></g><g fill='none' stroke='"+ink+"' stroke-width='0.9'>";for(let i=0;i<N;i++){const a=i/N*6.2832;s+="<line x1='"+F1(Math.cos(a)*Rr*0.42)+"' y1='"+F1(Math.sin(a)*Rr*0.42)+"' x2='"+F1(Math.cos(a)*Rr*0.86)+"' y2='"+F1(Math.sin(a)*Rr*0.86)+"'/>";}s+="</g><g fill='"+ink+"'>";for(let i=0;i<P;i++){const a=i/P*6.2832,x=Math.cos(a)*Rr*0.28,y=Math.sin(a)*Rr*0.28;s+="<ellipse cx='"+F1(x)+"' cy='"+F1(y)+"' rx='2.1' ry='4.6' transform='rotate("+F1(a*57.3+90)+" "+F1(x)+" "+F1(y)+")'/>";}s+="<circle r='3'/></g></g>";return s;}
+  function medRosette(){const Rr=42+R()*8,P1=12+Math.floor(R()*5),P2=8+Math.floor(R()*4);let s="<g transform='translate("+CX+" "+CY+")'><g fill='none' stroke='"+ink+"' stroke-width='1.2'><circle r='"+F1(Rr)+"'/><circle r='"+F1(Rr*0.62)+"'/></g><g fill='"+ink+"'>";for(let i=0;i<P1;i++){const a=i/P1*6.2832,x=Math.cos(a)*Rr*0.8,y=Math.sin(a)*Rr*0.8;s+="<ellipse cx='"+F1(x)+"' cy='"+F1(y)+"' rx='3' ry='8' transform='rotate("+F1(a*57.3+90)+" "+F1(x)+" "+F1(y)+")'/>";}for(let i=0;i<P2;i++){const a=(i+0.5)/P2*6.2832,x=Math.cos(a)*Rr*0.42,y=Math.sin(a)*Rr*0.42;s+="<ellipse cx='"+F1(x)+"' cy='"+F1(y)+"' rx='2.4' ry='5.4' transform='rotate("+F1(a*57.3+90)+" "+F1(x)+" "+F1(y)+")'/>";}s+="<circle r='3.4'/></g></g>";return s;}
+  function medStar(){const Rr=42+R()*8,N=6+Math.floor(R()*5);let d="";for(let i=0;i<N*2;i++){const a=i/(N*2)*6.2832-1.5708,rr=(i%2?Rr*0.42:Rr*0.92);d+=(i?"L":"M")+F1(Math.cos(a)*rr)+" "+F1(Math.sin(a)*rr);}d+="Z";return "<g transform='translate("+CX+" "+CY+")'><g fill='none' stroke='"+ink+"' stroke-width='1.3'><circle r='"+F1(Rr)+"'/><circle r='"+F1(Rr*0.5)+"'/></g><path d='"+d+"' fill='none' stroke='"+ink+"' stroke-width='1.4'/><circle r='3' fill='"+ink+"'/></g>";}
+  function medFloret(){const Rr=42+R()*8,P=8+Math.floor(R()*6);let s="<g transform='translate("+CX+" "+CY+")'><circle r='"+F1(Rr)+"' fill='none' stroke='"+ink+"' stroke-width='1.3'/><g fill='"+ink+"' fill-opacity='0.92'>";for(let i=0;i<P;i++){const a=i/P*6.2832;s+="<path transform='rotate("+F1(a*57.3)+")' d='M0 0 Q "+F1(Rr*0.34)+" "+F1(-Rr*0.5)+" 0 "+F1(-Rr*0.8)+" Q "+F1(-Rr*0.34)+" "+F1(-Rr*0.5)+" 0 0 Z'/>";}s+="</g><circle r='"+F1(Rr*0.18)+"' fill='none' stroke='"+ink+"' stroke-width='1.1'/><circle r='2.6' fill='"+ink+"'/></g>";return s;}
+  function medLattice(){const Rr=42+R()*8;let g="<clipPath id='m"+seed+"'><circle cx='"+CX+"' cy='"+CY+"' r='"+F1(Rr*0.86)+"'/></clipPath>";let l="<g clip-path='url(#m"+seed+")' stroke='"+ink+"' stroke-width='1'>";for(let i=-Rr;i<Rr;i+=7){l+="<line x1='"+F1(CX-Rr)+"' y1='"+F1(CY+i)+"' x2='"+F1(CX+Rr)+"' y2='"+F1(CY+i)+"'/>";}for(let i=-Rr;i<Rr;i+=7){l+="<line x1='"+F1(CX+i)+"' y1='"+F1(CY-Rr)+"' x2='"+F1(CX+i)+"' y2='"+F1(CY+Rr)+"'/>";}l+="</g>";return g+l+"<g transform='translate("+CX+" "+CY+")' fill='none' stroke='"+ink+"' stroke-width='1.3'><circle r='"+F1(Rr)+"'/><circle r='"+F1(Rr*0.86)+"'/></g><circle cx='"+CX+"' cy='"+CY+"' r='3' fill='"+ink+"'/>";}
+  /* corner arms */
+  function armScroll(){return "<g fill='none' stroke='"+ink+"' stroke-width='1.5' stroke-linecap='round'><path d='M16 12 C 58 20 96 58 104 116'/><path d='M40 16 C 54 38 50 62 34 78'/><path d='M34 78 C 26 88 15 84 14 74 C 24 78 28 69 22 62'/></g><path d='M104 116 C 120 118 126 104 117 95 C 133 100 131 126 106 128 Z' fill='"+ink+"' fill-opacity='0.88'/><ellipse cx='68' cy='42' rx='6' ry='10.5' transform='rotate(42 68 42)' fill='"+ink+"' fill-opacity='0.82'/>";}
+  function armFan(){let s="<g fill='none' stroke='"+ink+"' stroke-width='1.1'>";for(let i=0;i<7;i++){const a=0.18+i*0.16;s+="<line x1='14' y1='14' x2='"+F1(14+Math.cos(a)*104)+"' y2='"+F1(14+Math.sin(a)*104)+"'/>";}s+="</g><circle cx='14' cy='14' r='3' fill='"+ink+"'/>";return s;}
+  function armFleur(){return "<g fill='none' stroke='"+ink+"' stroke-width='1.3'><path d='M30 26 C 60 30 78 52 80 86'/><path d='M80 86 C 96 86 100 72 92 64 C 106 70 104 92 82 94 Z' fill='"+ink+"' fill-opacity='0.85'/></g><ellipse cx='52' cy='44' rx='5' ry='9' transform='rotate(40 52 44)' fill='"+ink+"' fill-opacity='0.8'/>";}
+  /* grounds */
+  function gDiamond(){let l="<g clip-path='url(#cl"+seed+")' stroke='"+ink+"' stroke-opacity='0.22' stroke-width='0.6'>";for(let i=-H;i<W+H;i+=12){l+="<line x1='"+i+"' y1='0' x2='"+(i+H)+"' y2='"+H+"'/><line x1='"+i+"' y1='0' x2='"+(i-H)+"' y2='"+H+"'/>";}return l+"</g>";}
+  function gCross(){let l="<g clip-path='url(#cl"+seed+")' stroke='"+ink+"' stroke-opacity='0.2' stroke-width='0.6'>";for(let y=22;y<328;y+=9)l+="<line x1='22' y1='"+y+"' x2='228' y2='"+y+"'/>";for(let x=22;x<228;x+=9)l+="<line x1='"+x+"' y1='22' x2='"+x+"' y2='328'/>";return l+"</g>";}
+  function gDots(){let l="<g clip-path='url(#cl"+seed+")' fill='"+ink+"' fill-opacity='0.26'>";let ry=0;for(let y=24;y<328;y+=12){const off=(ry%2)*6;for(let x=24;x<228;x+=12)l+="<circle cx='"+(x+off)+"' cy='"+y+"' r='1.3'/>";ry++;}return l+"</g>";}
+  function gNone(){return "";}
+  /* borders */
+  function bdBeads(){let s="<g fill='none' stroke='"+ink+"'><rect x='12' y='12' width='226' height='326' rx='12' stroke-width='1.6'/><rect x='18' y='18' width='214' height='314' rx='9' stroke-width='0.9'/></g><g fill='"+ink+"'>";const bx=15,by=15,bw=220,bh=320,sp=11;for(let x=bx+sp;x<bx+bw-sp/2;x+=sp){s+="<circle cx='"+F1(x)+"' cy='"+by+"' r='1.5'/><circle cx='"+F1(x)+"' cy='"+(by+bh)+"' r='1.5'/>";}for(let y=by+sp;y<by+bh-sp/2;y+=sp){s+="<circle cx='"+bx+"' cy='"+F1(y)+"' r='1.5'/><circle cx='"+(bx+bw)+"' cy='"+F1(y)+"' r='1.5'/>";}return s+"</g>";}
+  function bdDouble(){return "<g fill='none' stroke='"+ink+"'><rect x='12' y='12' width='226' height='326' rx='12' stroke-width='2'/><rect x='17' y='17' width='216' height='316' rx='9' stroke-width='0.8'/><rect x='21' y='21' width='208' height='308' rx='7' stroke-width='0.8'/></g>";}
+  function bdDash(){return "<g fill='none' stroke='"+ink+"'><rect x='12' y='12' width='226' height='326' rx='12' stroke-width='1.6'/><rect x='18' y='18' width='214' height='314' rx='9' stroke-width='1.4' stroke-dasharray='2 4'/></g>";}
+  const clip="<clipPath id='cl"+seed+"'><rect x='22' y='22' width='206' height='306' rx='7'/></clipPath>";
+  const med=pick([medWheel,medRosette,medStar,medFloret,medLattice]);
+  const arm=pick([armScroll,armScroll,armFan,armFleur]);
+  const grnd=pick([gDiamond,gCross,gDots,gNone,gDiamond]);
+  const bord=pick([bdBeads,bdBeads,bdDouble,bdDash]);
+  const body="<rect width='"+W+"' height='"+H+"' fill='"+field+"'/>"+clip+grnd()+quad(arm())+med()+bord();
+  return svURL(W,H,body);
 }
-  const WAYS=[
-    ["Rouge classique","#b3122e","#ffffff"],
-    ["Rouge ardent","#c8102e","#fff5f3"],
-    ["Braise (app)","#7a0f1e","#ffd9d0"],
-    ["Bordeaux & or","#5a0a14","#e8c07a"],
-    ["Bleu classique","#1f3f8f","#ffffff"],
-    ["Encre sur crème","#f4ece0","#a01228"]
-  ];
-  const board=document.getElementById('board');
-  WAYS.forEach((w,i)=>{
-    const it=document.createElement('div');it.className='item';
-    it.innerHTML="<div class='card'><div class='art'></div></div><div class='lbl'>"+w[0]+"</div>";
-    board.appendChild(it);
-    it.querySelector('.art').style.background=bicycleBack(w[1],w[2],i+1);
-  });
+function bicycleMotif(seed){const ways=[['#b3122e','#ffffff'],['#c8102e','#fff5f3'],['#7a0f1e','#ffd9d0'],['#5a0a14','#e8c07a'],['#8a0f22','#ffe3da']];const r=oRng(seed*3+1);const w=ways[Math.floor(r()*ways.length)];return bicycleBack(w[0],w[1],seed);}
+
+const board=document.getElementById('board');
+for(let i=0;i<14;i++){const it=document.createElement('div');it.className='item';it.innerHTML="<div class='card'><div class='art'></div></div>";board.appendChild(it);it.querySelector('.art').style.background=bicycleMotif(i*131+7);}
 </script></body></html>
