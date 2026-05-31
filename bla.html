@@ -57,8 +57,8 @@
   #setup{align-items:center;justify-content:safe center;padding:24px;overflow-y:auto;}
   #setup .brand{font-size:46px;margin-bottom:4px;}
   .sub{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:28px;}
-  .modes{display:flex;gap:4px;background:rgba(255,255,255,.1);border-radius:999px;padding:4px;margin:0 auto 14px;width:max-content;max-width:94vw;flex-wrap:wrap;justify-content:center;}
-  .modes .mode{border:none;background:transparent;color:rgba(255,255,255,.72);font-family:inherit;font-weight:600;font-size:13.5px;padding:8px 14px;border-radius:999px;cursor:pointer;transition:.2s;}
+  .modes{display:flex;gap:4px;background:rgba(255,255,255,.1);border-radius:999px;padding:4px;margin:0 auto 26px;width:100%;max-width:360px;}
+  .modes .mode{flex:1;text-align:center;border:none;background:transparent;color:rgba(255,255,255,.72);font-family:inherit;font-weight:600;font-size:13.5px;padding:9px 6px;border-radius:999px;cursor:pointer;transition:.2s;}
   .modes .mode.on{background:#fff;color:#1c1a15;}
   .groupnote{display:none;color:rgba(255,255,255,.82);font-size:15px;max-width:30ch;margin:2px auto 6px;text-align:center;line-height:1.5;}
   .rows{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;}
@@ -445,6 +445,13 @@
                  G("#eab308","#f59e0b"),G("#d6336c","#ec4899"),G("#0d9488","#10b981"),G("#6366f1","#8b5cf6"),
                  G("#e11d48","#fb7185"),G("#0891b2","#06b6d4"),G("#65a30d","#84cc16")];
   function cardBG(i){ return PAT_URLS[i%PAT_URLS.length]+', '+PALETTE[i%PALETTE.length]; }
+  /* lots motif+couleur par thème (Connaître = tout, inchangé) — indices dans PATTERNS / gradients dédiés */
+  const DECK_STYLE={
+    seduire:{ pats:[0,2,6,7,12,13],
+      cols:[G("#ff7aa2","#ff4d6d"),G("#ff8fb1","#ff5e8a"),G("#f472b6","#db2777"),G("#c084fc","#f472b6"),G("#fb7185","#e11d48"),G("#ffa07a","#ff6f91")] },
+    chauffer:{ pats:[4,11,3,1,5,15],
+      cols:[G("#e11d48","#7f1d1d"),G("#ff2d55","#c026d3"),G("#dc2626","#9d174d"),G("#b91c1c","#831843"),G("#ff4d6d","#c026d3"),G("#f5425f","#7a0b2e")] }
+  };
 
   const $=id=>document.getElementById(id);
   const rand=n=>Math.floor(Math.random()*n);
@@ -643,12 +650,15 @@
   /* pose le deck UNE SEULE FOIS : chaque carte reçoit sa question + son motif (couleur + trame) définitifs */
   function dealDeck(){
     const order=buildPile();
+    const st=DECK_STYLE[deckKey];
+    const pats = st ? st.pats.map(i=>PAT_URLS[i]) : PAT_URLS;   /* motifs du thème (sinon tous) */
+    const cols = st ? st.cols : PALETTE;                        /* couleurs du thème (sinon toute la palette) */
     let lastP=-1,lastC=-1;
     cards.forEach((el,i)=>{
       el._qid=order[i]; el._dead=false;
-      let p; do{p=rand(PAT_URLS.length);}while(PAT_URLS.length>1&&p===lastP); lastP=p;
-      let c; do{c=rand(PALETTE.length);}while(PALETTE.length>1&&c===lastC); lastC=c;
-      const bg=PAT_URLS[p]+', '+PALETTE[c];
+      let p; do{p=rand(pats.length);}while(pats.length>1&&p===lastP); lastP=p;
+      let c; do{c=rand(cols.length);}while(cols.length>1&&c===lastC); lastC=c;
+      const bg=pats[p]+', '+cols[c];
       el.dataset.bg=bg; const bk=el.querySelector('.face.back'); if(bk) bk.style.background=bg;
     });
     dealt=true;
