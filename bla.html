@@ -222,9 +222,8 @@
     <div class="bottom">
       <div id="prompt" class="prompt">Touche une carte</div>
       <div id="actions" class="actions">
-        <button id="again" class="btn ghost">Piger à nouveau</button>
         <button id="del" class="btn ghost">Supprimer</button>
-        <button id="next" class="btn fill">Au suivant</button>
+        <button id="another" class="btn fill">Une autre&nbsp;!</button>
       </div>
     </div>
   </section>
@@ -410,6 +409,7 @@
   }
   $('addp').onclick=addRow;
   let players=[];
+  let deleted=new Set();          /* questions « Supprimer » — exclues des piles à venir */
   let groupMode=false;
   $('modes').querySelectorAll('.mode').forEach(btn=>{
     btn.onclick=()=>{
@@ -534,10 +534,12 @@
   function shuf(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=rand(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; }
   /* eased start per person: 2 questions from série 1, then 3 from série 2, then a true shuffle of the rest */
   function buildPile(){
-    const ofS=s=>ALL.map((q,i)=>q.serie===s?i:-1).filter(i=>i>=0);
+    let avail=ALL.map((_,i)=>i).filter(i=>!deleted.has(i));
+    if(avail.length===0){ deleted.clear(); avail=ALL.map((_,i)=>i); }   /* tout supprimé → on recycle */
+    const ofS=s=>avail.filter(i=>ALL[i].serie===s);
     const head=shuf(ofS(1)).slice(0,2).concat(shuf(ofS(2)).slice(0,3));
     const used=new Set(head);
-    return head.concat(shuf(ALL.map((_,i)=>i).filter(i=>!used.has(i))));
+    return head.concat(shuf(avail.filter(i=>!used.has(i))));
   }
   /* consomme une carte précise : retire SA question ET sort la carte de l'éventail (vers le fond) */
   function consumeCard(el){
@@ -704,10 +706,10 @@
   }
 
   /* the open card slides back into the deck — same player, pile just shrank by one */
+  /* fermer la carte ouverte sans rien consommer (taper la carte ouverte) */
   function putBack(){
     if(!curEl) return;
-    clearTimer();
-    consumeCard(curEl); curQid=null;                 /* la carte ouverte quitte l'éventail */
+    clearTimer(); curQid=null;
     curEl.classList.remove('out','flipped'); curEl=null;
     deck.classList.remove('frozen','presenting');
     $('actions').classList.remove('show');
@@ -717,19 +719,30 @@
     animating=true; setTimeout(()=>animating=false,420);
   }
 
-  /* « Supprimer » : retire la question courante et en ouvre une autre tout de suite */
-  function deleteAndDraw(){
+  /* deux actions : « Une autre! » (remove=false) et « Supprimer » (remove=true).
+     Les deux ferment la carte et en ouvrent aussitôt une autre.
+     - Une autre! : la question est mise de côté (revient au prochain tour de la pile) ; passe au joueur suivant s'il y en a plusieurs.
+     - Supprimer : la question est retirée pour de bon (tous les joueurs, toutes les piles à venir). */
+  function advance(remove){
     if(animating || !curEl) return;
     animating=true; clearTimer();
+    const qid=curEl._qid;
     consumeCard(curEl); curQid=null;
+    if(remove && qid!=null){
+      deleted.add(qid);
+      players.forEach((p,pi)=>{ if(pi!==curPlayer && p._q){ const k=p._q.indexOf(qid); if(k>=0) p._q.splice(k,1); } });
+    } else if(!remove && players.length>1){
+      curPlayer=(curPlayer+1)%players.length;          /* « Une autre! » passe au joueur suivant */
+    }
     curEl.classList.remove('out','flipped'); curEl=null;
     deck.classList.remove('frozen','presenting');
     $('actions').classList.remove('show');
     pan=0; cancelInertia();
-    applyVis();                                   /* l'éventail rétrécit + rebind */
+    paintCards();                                       /* nouvelles trames pour la pioche suivante */
+    applyVis(); setBacks();
     setTimeout(()=>{
       animating=false;
-      if(vis>=1) pullOut(cards[rand(vis)]);       /* on pige une autre carte automatiquement */
+      if(vis>=1) pullOut(cards[rand(vis)]);             /* on pige une autre carte automatiquement */
       else showPrompt();
     },220);
   }
@@ -779,9 +792,8 @@
     }, 320);
   }
 
-  $('again').onclick=()=>{ if(animating) return; putBack(); };                                   /* même joueur : on garde le tas */
-  $('del').onclick=()=>{ if(animating) return; deleteAndDraw(); };                                /* supprime la question et en pige une autre */
-  $('next').onclick=()=>{ if(animating) return; consumeCard(curEl); curQid=null; curPlayer=(curPlayer+1)%players.length; shuffleByCenter(); }; /* valide la question puis joueur suivant */
+  $('del').onclick=()=>{ if(animating) return; advance(true); };       /* Supprimer : retire la question et en pige une autre */
+  $('another').onclick=()=>{ if(animating) return; advance(false); };  /* Une autre! : passe à une autre question */
 
   /* ---------- finite left/right drag, with a soft bounce at the ends ---------- */
   const area=document.querySelector('.deck-area');
