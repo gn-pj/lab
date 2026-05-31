@@ -223,8 +223,8 @@
     <div class="bottom">
       <div id="prompt" class="prompt">Touche une carte</div>
       <div id="actions" class="actions">
-        <button id="del" class="btn ghost">Supprimer</button>
-        <button id="another" class="btn fill">Une autre&nbsp;!</button>
+        <button id="another" class="btn ghost">Une autre&nbsp;!</button>
+        <button id="next" class="btn fill">Suivant&nbsp;!</button>
       </div>
     </div>
   </section>
@@ -807,20 +807,39 @@
     animating=true; setTimeout(()=>animating=false,420);
   }
 
-  /* deux actions, deck figé :
-     - « Une autre! » (remove=false) : fin du tour → au joueur suivant, qui touchera lui-même une carte.
-     - « Supprimer » (remove=true)  : la carte quitte le deck pour de bon (ordre + motifs des autres intacts), même joueur. */
-  function advance(remove){
+  /* « Une autre! » : même joueur, la carte actuelle est PRÉSERVÉE (reste dans le deck),
+     on en ouvre une autre automatiquement. */
+  function anotherCard(){
     if(animating || !curEl) return;
     animating=true; clearTimer();
     const done=curEl;
-    if(remove){ done._dead=true; }
-    else if(players.length>1){ curPlayer=(curPlayer+1)%players.length; }   /* chacun son tour, dans l'ordre tiré au départ */
     done.classList.remove('out','flipped'); curEl=null; curQid=null;
     deck.classList.remove('frozen','presenting');
     $('actions').classList.remove('show');
-    cancelInertia();                              /* on garde la position de l'éventail */
-    applyVis(); setBacks(); showPrompt();         /* on revient à l'éventail : le joueur touchera sa carte */
+    cancelInertia();
+    applyVis();                                   /* deck inchangé : la carte est conservée */
+    setTimeout(()=>{
+      animating=false;
+      let pool=fanList().filter(c=>c!==done);     /* une carte différente */
+      if(pool.length===0) pool=fanList();
+      if(pool.length) pullOut(pool[rand(pool.length)]);
+      else showPrompt();
+    },200);
+  }
+
+  /* « Suivant! » : la carte actuelle est SUPPRIMÉE du deck, c'est au joueur suivant,
+     qui devra toucher lui-même une carte pour la choisir. */
+  function nextPlayer(){
+    if(animating || !curEl) return;
+    animating=true; clearTimer();
+    const done=curEl;
+    done._dead=true;                              /* la carte jouée quitte le deck */
+    if(players.length>1) curPlayer=(curPlayer+1)%players.length;
+    done.classList.remove('out','flipped'); curEl=null; curQid=null;
+    deck.classList.remove('frozen','presenting');
+    $('actions').classList.remove('show');
+    cancelInertia();
+    applyVis(); setBacks(); showPrompt();         /* le suivant touche une carte */
     setTimeout(()=>{ animating=false; },420);
   }
 
@@ -861,8 +880,8 @@
     }, 320);
   }
 
-  $('del').onclick=()=>{ if(animating) return; advance(true); };       /* Supprimer : retire la question et en pige une autre */
-  $('another').onclick=()=>{ if(animating) return; advance(false); };  /* Une autre! : passe à une autre question */
+  $('another').onclick=()=>{ if(animating) return; anotherCard(); };   /* Une autre! : même joueur, carte préservée, pioche auto */
+  $('next').onclick=()=>{ if(animating) return; nextPlayer(); };        /* Suivant! : carte supprimée, au joueur suivant (il touche) */
 
   /* ---------- finite left/right drag, with a soft bounce at the ends ---------- */
   const area=document.querySelector('.deck-area');
