@@ -89,7 +89,10 @@
   .row.linked .name{box-shadow:0 0 0 2px var(--cc,#8b5cf6);border-color:transparent;}
   .lghost{position:fixed;z-index:9999;pointer-events:none;padding:13px 16px;border-radius:16px;background:#fff;color:#1b1a3a;font-family:"Bricolage Grotesque";font-weight:800;font-size:15px;box-shadow:0 14px 36px rgba(0,0,0,.45);transform:translate(-50%,-50%);max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   body.linking #setup{overflow:hidden;}
-  .linkhint{font-size:11.5px;color:rgba(255,255,255,.42);text-align:center;margin-top:9px;line-height:1.4;}
+  .linkhint{font-size:11.5px;color:rgba(255,255,255,.55);text-align:center;margin-top:9px;line-height:1.6;}
+  .linkhint .cpl{white-space:nowrap;}
+  .linkhint .dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px;}
+  .linkhint .sep{opacity:.5;}
   .ver{position:fixed;right:8px;bottom:6px;z-index:50;font-size:10px;letter-spacing:.04em;color:rgba(255,255,255,.35);pointer-events:none;}
   .addp{margin-top:14px;background:transparent;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.82);
     font-family:"Archivo";font-weight:600;font-size:14px;border-radius:12px;padding:9px 18px;cursor:pointer;transition:.2s;}
@@ -198,7 +201,7 @@
 </style>
 </head>
 <body>
-<div class="ver">v8 · couples</div>
+<div class="ver">v9 · couples</div>
 <div class="blob a"></div><div class="blob b"></div>
 <div id="app">
 
@@ -642,10 +645,11 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
   const rowsEl=$('rows');
   const MAXP=8;
   const COUPLE_COLORS=['#8b5cf6','#14b8a6','#f59e0b','#84cc16'];
-  function unlinkRow(r){ const o=r&&r._link; [r,o].forEach(x=>{ if(!x) return; x._link=null; x.classList.remove('linked'); x.style.removeProperty('--cc'); delete x.dataset.cc; }); updateLinkHint(); }
-  function linkRows(a,b){ if(!a||!b||a===b) return; if(a._link===b){ unlinkRow(a); return; } unlinkRow(a); unlinkRow(b); const used=new Set([...rowsEl.querySelectorAll('.row.linked')].map(r=>r.dataset.cc)); const color=COUPLE_COLORS.find(c=>!used.has(c))||COUPLE_COLORS[0]; a._link=b; b._link=a; [a,b].forEach(r=>{ r.classList.add('linked'); r.style.setProperty('--cc',color); r.dataset.cc=color; }); updateLinkHint(); }
+  function unlinkRow(r){ const o=r&&r._link; [r,o].forEach(x=>{ if(!x) return; x._link=null; x.classList.remove('linked'); x.style.removeProperty('--cc'); delete x.dataset.cc; }); updateLinkHint(); saveSetup(); }
+  function linkRows(a,b){ if(!a||!b||a===b) return; if(a._link===b){ unlinkRow(a); return; } unlinkRow(a); unlinkRow(b); const used=new Set([...rowsEl.querySelectorAll('.row.linked')].map(r=>r.dataset.cc)); const color=COUPLE_COLORS.find(c=>!used.has(c))||COUPLE_COLORS[0]; a._link=b; b._link=a; [a,b].forEach(r=>{ r.classList.add('linked'); r.style.setProperty('--cc',color); r.dataset.cc=color; }); updateLinkHint(); saveSetup(); }
   function rowUnder(x,y,exclude){ let best=null,bestD=Infinity,h=44; rowsEl.querySelectorAll('.row').forEach(r=>{ if(r===exclude) return; const b=r.getBoundingClientRect(); h=b.height; const cy=b.top+b.height/2; const d=Math.abs(cy-y); if(d<bestD){bestD=d;best=r;} }); return bestD<=h*1.6 ? best : null; }
-  function updateLinkHint(){ const n=rowsEl.querySelectorAll('.row.linked').length/2; const h=document.querySelector('.linkhint'); if(!h) return; h.textContent = n>=1 ? (n+' couple'+(n>1?'s':'')+' formé'+(n>1?'s':'')+' · glisse pour en lier d’autres') : 'Glisse un prénom sur un autre pour former un couple'; }
+  function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function updateLinkHint(){ const h=document.querySelector('.linkhint'); if(!h) return; const seen=new Set(); const pairs=[]; rowsEl.querySelectorAll('.row.linked').forEach(r=>{ if(seen.has(r)||!r._link) return; seen.add(r); seen.add(r._link); const a=r.querySelector('.name').value.trim()||'?'; const b=r._link.querySelector('.name').value.trim()||'?'; pairs.push({a,b,c:r.dataset.cc||'#8b5cf6'}); }); if(!pairs.length){ h.innerHTML='Glisse un prénom sur un autre pour former un couple'; return; } h.innerHTML='Couples : '+pairs.map(p=>'<span class="cpl"><span class="dot" style="background:'+p.c+'"></span>'+esc(p.a)+' &amp; '+esc(p.b)+'</span>').join('<span class="sep"> · </span>'); }
   function onRowDown(row,e){ if(e.target.closest('.gw')||e.target.closest('.rm')) return; const sx=e.clientX,sy=e.clientY,pid=e.pointerId; let drag=false,ghost=null; try{ row.setPointerCapture(pid); }catch(_){}
     const begin=()=>{ if(drag)return; drag=true; row.classList.add('dragging'); document.body.classList.add('linking'); const inp=row.querySelector('.name'); if(inp)inp.blur(); ghost=document.createElement('div'); ghost.className='lghost'; ghost.style.width=row.getBoundingClientRect().width+'px'; ghost.textContent='🔗 '+(row.querySelector('.name').value.trim()||'ce joueur'); document.body.appendChild(ghost); if(navigator.vibrate)navigator.vibrate(12); };
     const move=ev=>{ if(ev.pointerId!==pid) return; if(!drag){ if(Math.hypot(ev.clientX-sx,ev.clientY-sy)>8) begin(); else return; } ev.preventDefault(); ghost.style.left=ev.clientX+'px'; ghost.style.top=ev.clientY+'px'; const tg=rowUnder(ev.clientX,ev.clientY,row); rowsEl.querySelectorAll('.row').forEach(r=>r.classList.toggle('drop',r===tg)); };
@@ -661,8 +665,9 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
     const setG=g=>row.querySelectorAll('.g').forEach(x=>x.classList.toggle('on',x.dataset.g===g));
     setG(p.g);
     input.addEventListener('input',()=>{ if(!manual){ const g=detect(input.value); if(g) setG(g); } });
-    row.querySelectorAll('.g').forEach(b=>{ b.onclick=()=>{manual=true;setG(b.dataset.g);}; });
-    row.querySelector('.rm').onclick=()=>{ unlinkRow(row); row.remove(); refreshRows(); };
+    input.addEventListener('change',()=>{ updateLinkHint(); saveSetup(); });
+    row.querySelectorAll('.g').forEach(b=>{ b.onclick=()=>{manual=true;setG(b.dataset.g);saveSetup();}; });
+    row.querySelector('.rm').onclick=()=>{ unlinkRow(row); row.remove(); refreshRows(); updateLinkHint(); saveSetup(); };
     row.addEventListener('pointerdown', e=>onRowDown(row,e));
     return row;
   }
@@ -671,10 +676,10 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
     rows.forEach(r=>{ r.querySelector('.rm').style.display = rows.length>2 ? '' : 'none'; });
     $('addp').style.display = rows.length>=MAXP ? 'none' : '';
   }
-  function buildRows(list){ rowsEl.innerHTML=''; list.forEach(p=>rowsEl.appendChild(makeRow(p))); refreshRows(); }
+  function buildRows(list){ rowsEl.innerHTML=''; const rows=list.map(p=>{ const r=makeRow(p); rowsEl.appendChild(r); return r; }); list.forEach((p,i)=>{ if(p.link!=null && p.link>i && rows[p.link]) linkRows(rows[i], rows[p.link]); }); refreshRows(); updateLinkHint(); }
   function addRow(){
     const n=rowsEl.querySelectorAll('.row').length; if(n>=MAXP) return;
-    const r=makeRow({name:'',g:n%2?'m':'f'}); rowsEl.appendChild(r); refreshRows();
+    const r=makeRow({name:'',g:n%2?'m':'f'}); rowsEl.appendChild(r); refreshRows(); saveSetup();
     r.querySelector('.name').focus();
   }
   $('addp').onclick=addRow;
@@ -699,6 +704,7 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
     return null;
   }
   function saveNames(list){ try{ localStorage.setItem(LS, JSON.stringify(list)); }catch(e){} }
+  function saveSetup(){ const rows=[...rowsEl.querySelectorAll('.row')]; const idx=new Map(); rows.forEach((r,i)=>idx.set(r,i)); const data=rows.map(r=>({ name:r.querySelector('.name').value.trim(), g:(r.querySelector('.g.on')||{dataset:{g:'f'}}).dataset.g, link:(r._link&&idx.has(r._link))?idx.get(r._link):null })); try{ localStorage.setItem(LS, JSON.stringify(data)); }catch(e){} }
   function padded(list){ list=list.slice(); while(list.length<2) list.push({name:'',g:list.length%2?'m':'f'}); return list; }
 
   buildRows(padded(loadSaved()||DEFAULTS.map(d=>({...d}))));
@@ -724,7 +730,7 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
     const idxOf=new Map(); valid.forEach((x,i)=>idxOf.set(x.r,i));
     players=valid.map(x=>({ name:x.name, fem:x.fem, link:(x.r._link&&idxOf.has(x.r._link))?idxOf.get(x.r._link):null }));
     $('hint').classList.remove('show');
-    saveNames(players.map(p=>({name:p.name,g:p.fem?'f':'m'})));
+    saveSetup();
     $('setup').classList.remove('active');
     $('game').classList.add('active');
     startGame();
