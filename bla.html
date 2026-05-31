@@ -51,6 +51,7 @@
   @keyframes fade{from{opacity:0}to{opacity:1}}
 
   .brand{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;letter-spacing:-.02em;}
+  .deck-emoji{font-weight:400;font-size:.9em;letter-spacing:0;vertical-align:middle;}
 
   /* ---------- SETUP ---------- */
   #setup{align-items:center;justify-content:safe center;padding:24px;overflow-y:auto;}
@@ -204,7 +205,7 @@
   <!-- GAME -->
   <section id="game" class="screen">
     <div class="topbar">
-      <div class="brand">Bla</div>
+      <div class="brand">Bla <span id="deckEmoji" class="deck-emoji"></span></div>
       <div class="top-actions">
         <button id="shuffle" class="icon-btn" aria-label="Mélanger" title="Mélanger">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></svg>
@@ -662,6 +663,7 @@
       for(let i=players.length-1;i>0;i--){ const j=rand(i+1); [players[i],players[j]]=[players[j],players[i]]; }
     }
     curPlayer=0;                                    /* puis chacun son tour, dans cet ordre */
+    { const e=$('deckEmoji'); if(e) e.textContent=DECKS[deckKey]?DECKS[deckKey].emoji:''; }   /* emoji du thème à côté de « Bla » */
     dealDeck();                                  /* deck figé pour toute la partie : motif + question par carte */
     pan=0; cancelInertia(); curEl=null; curQid=null;
     cards.forEach(el=>el.classList.remove('out','flipped'));
