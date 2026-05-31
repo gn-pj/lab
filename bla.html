@@ -606,7 +606,7 @@
   }
   function fill(el,person,q,partner){
     el.querySelector('.fhead').style.background=el.dataset.bg;   /* recto = couleur + motif de CETTE carte */
-    el.querySelector('.fserie').textContent='Série '+ROMAN[q.serie];
+    el.querySelector('.fserie').textContent='Niveau '+q.serie;
     el.querySelector('.fname').textContent=person.name;
     el.querySelector('.ffoot').textContent='Question '+q.n+' / 36';
     const txt=resolve(SETS[q.serie][q.idx], person.fem, partner);
@@ -674,9 +674,7 @@
     const qid=el._qid;                              /* question figée de CETTE carte */
     const q=ALL[qid], raw=SETS[q.serie][q.idx];
     let partner=null;
-    if(/\{P\}|\{deP\}|\{p:/.test(raw) && players.length>1){
-      let pj; do{pj=rand(players.length);}while(pj===curPlayer); partner=players[pj];
-    }
+    if(/\{P\}|\{deP\}|\{p:/.test(raw) && players.length>1){ partner=players[(curPlayer+1)%players.length]; }  /* la personne dont c'est le tour juste après */
     const reveal=()=>{
       fill(el,person,q,partner);
       el.classList.add('out','flipped');
@@ -711,27 +709,20 @@
   }
 
   /* deux actions, deck figé :
-     - « Une autre! » (remove=false) : ne supprime rien ; passe au joueur suivant s'il y en a, puis ouvre une autre carte.
-     - « Supprimer » (remove=true)  : la carte quitte le deck pour de bon ; l'ordre et les motifs des autres restent intacts. */
+     - « Une autre! » (remove=false) : fin du tour → au joueur suivant, qui touchera lui-même une carte.
+     - « Supprimer » (remove=true)  : la carte quitte le deck pour de bon (ordre + motifs des autres intacts), même joueur. */
   function advance(remove){
     if(animating || !curEl) return;
     animating=true; clearTimer();
     const done=curEl;
     if(remove){ done._dead=true; }
-    else if(players.length>1){ curPlayer=(curPlayer+1)%players.length; }
+    else if(players.length>1){ curPlayer=(curPlayer+1)%players.length; }   /* chacun son tour, dans l'ordre tiré au départ */
     done.classList.remove('out','flipped'); curEl=null; curQid=null;
     deck.classList.remove('frozen','presenting');
     $('actions').classList.remove('show');
-    pan=0; cancelInertia();
-    applyVis(); setBacks();                              /* AUCUN repeint : motifs figés */
-    setTimeout(()=>{
-      animating=false;
-      let pool=fanList();
-      if(!remove) pool=pool.filter(c=>c!==done);         /* une autre carte que celle qu'on vient de fermer */
-      if(pool.length===0) pool=fanList();
-      if(pool.length>=1) pullOut(pool[rand(pool.length)]);
-      else showPrompt();
-    },220);
+    cancelInertia();                              /* on garde la position de l'éventail */
+    applyVis(); setBacks(); showPrompt();         /* on revient à l'éventail : le joueur touchera sa carte */
+    setTimeout(()=>{ animating=false; },420);
   }
 
   /* Mélanger : les cartes se rassemblent au centre, on rebrasse l'ORDRE (chaque carte garde
