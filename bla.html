@@ -562,7 +562,10 @@
 
   function startGame(){
     if(!built) buildDeck();
-    curPlayer=rand(players.length);
+    if(!groupMode && players.length>1){            /* on tire l'ordre du tour de table au sort, une seule fois */
+      for(let i=players.length-1;i>0;i--){ const j=rand(i+1); [players[i],players[j]]=[players[j],players[i]]; }
+    }
+    curPlayer=0;                                    /* puis chacun son tour, dans cet ordre */
     dealDeck();                                  /* deck figé pour toute la partie : motif + question par carte */
     pan=0; cancelInertia(); curEl=null; curQid=null;
     cards.forEach(el=>el.classList.remove('out','flipped'));
