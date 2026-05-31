@@ -539,8 +539,14 @@
     const used=new Set(head);
     return head.concat(shuf(ALL.map((_,i)=>i).filter(i=>!used.has(i))));
   }
-  /* consomme la question d'une carte précise (retirée de la pile restante) */
-  function takeQ(qid){ const pl=players[curPlayer]; const k=pl._q?pl._q.indexOf(qid):-1; if(k>=0) pl._q.splice(k,1); }
+  /* consomme une carte précise : retire SA question ET sort la carte de l'éventail (vers le fond) */
+  function consumeCard(el){
+    if(!el) return;
+    const pl=players[curPlayer], j=cards.indexOf(el);
+    if(j>=0 && pl._q && j<pl._q.length) pl._q.splice(j,1);   /* carte ↔ question alignées : on retire la sienne */
+    if(j>=0){ cards.splice(j,1); cards.push(el); }           /* la carte quitte l'éventail, ne reviendra pas */
+    el._qid=null;
+  }
 
   /* the deck "belongs" to whoever's turn it is → their name on every back */
   function setBacks(){ const nm = groupMode ? 'Bla' : (players[curPlayer]?players[curPlayer].name:''); cards.forEach(el=>{ const b=el.querySelector('.bk'); if(b) b.textContent=nm; }); }
@@ -701,7 +707,7 @@
   function putBack(){
     if(!curEl) return;
     clearTimer();
-    if(curQid!=null){ takeQ(curQid); curQid=null; }   /* question validée → retirée de la pile */
+    consumeCard(curEl); curQid=null;                 /* la carte ouverte quitte l'éventail */
     curEl.classList.remove('out','flipped'); curEl=null;
     deck.classList.remove('frozen','presenting');
     $('actions').classList.remove('show');
@@ -715,7 +721,7 @@
   function deleteAndDraw(){
     if(animating || !curEl) return;
     animating=true; clearTimer();
-    if(curQid!=null){ takeQ(curQid); curQid=null; }
+    consumeCard(curEl); curQid=null;
     curEl.classList.remove('out','flipped'); curEl=null;
     deck.classList.remove('frozen','presenting');
     $('actions').classList.remove('show');
@@ -775,7 +781,7 @@
 
   $('again').onclick=()=>{ if(animating) return; putBack(); };                                   /* même joueur : on garde le tas */
   $('del').onclick=()=>{ if(animating) return; deleteAndDraw(); };                                /* supprime la question et en pige une autre */
-  $('next').onclick=()=>{ if(animating) return; if(curQid!=null){ takeQ(curQid); curQid=null; } curPlayer=(curPlayer+1)%players.length; shuffleByCenter(); }; /* valide la question puis joueur suivant */
+  $('next').onclick=()=>{ if(animating) return; consumeCard(curEl); curQid=null; curPlayer=(curPlayer+1)%players.length; shuffleByCenter(); }; /* valide la question puis joueur suivant */
 
   /* ---------- finite left/right drag, with a soft bounce at the ends ---------- */
   const area=document.querySelector('.deck-area');
