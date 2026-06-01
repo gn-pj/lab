@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>Blind test 90s</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow:hidden;}
+  body{font-family:"Archivo",sans-serif;color:#fff;user-select:none;
+    background:
+      radial-gradient(60% 50% at 18% 12%, rgba(255,95,176,.30) 0%, transparent 55%),
+      radial-gradient(60% 50% at 86% 84%, rgba(54,183,245,.32) 0%, transparent 55%),
+      linear-gradient(160deg,#2a123f 0%,#181033 52%,#10243f 100%);}
+  .blob{position:fixed;border-radius:50%;filter:blur(60px);opacity:.4;z-index:0;}
+  .blob.a{width:42vmax;height:42vmax;left:-12vmax;top:-10vmax;background:#ff5fb0;animation:d1 18s ease-in-out infinite;}
+  .blob.b{width:38vmax;height:38vmax;right:-12vmax;bottom:-12vmax;background:#36b7f5;animation:d2 22s ease-in-out infinite;}
+  @keyframes d1{0%,100%{transform:translate(0,0)}50%{transform:translate(4vmax,3vmax)}}
+  @keyframes d2{0%,100%{transform:translate(0,0)}50%{transform:translate(-4vmax,-3vmax)}}
+  #app{height:100dvh;display:flex;flex-direction:column;position:relative;z-index:2;}
+  .brand{font-family:"Bricolage Grotesque";font-weight:800;letter-spacing:-.02em;}
+  .screen{display:none;flex:1;flex-direction:column;min-height:0;}
+  .screen.active{display:flex;animation:fade .5s ease;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+
+  /* HOME */
+  #home{align-items:center;justify-content:center;text-align:center;padding:28px;}
+  #home .brand{font-size:clamp(40px,12vw,66px);line-height:1;}
+  #home .sub{color:rgba(255,255,255,.72);margin:10px 0 34px;font-size:clamp(15px,4.4vw,18px);}
+  .levels{display:flex;flex-direction:column;gap:13px;width:100%;max-width:340px;}
+  .lvl{display:flex;align-items:center;gap:14px;padding:17px 20px;border:none;cursor:pointer;border-radius:20px;
+    color:#fff;font-family:"Bricolage Grotesque";font-weight:700;font-size:18px;text-align:left;transition:transform .15s,box-shadow .2s;}
+  .lvl:active{transform:scale(.97);}
+  .lvl .n{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;opacity:.9;display:block;font-family:"Archivo";}
+  .lvl b{display:block;font-size:19px;}
+  .lvl1{background:linear-gradient(135deg,#22c55e,#10b981);}
+  .lvl2{background:linear-gradient(135deg,#f59e0b,#f43f5e);}
+  .lvl3{background:linear-gradient(135deg,#8b5cf6,#ec4899);}
+  .lvl .emoji{font-size:26px;}
+
+  /* GAME */
+  #game{padding:0;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;}
+  .icon-btn{width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;}
+  .icon-btn:active{background:rgba(255,255,255,.24);}
+  .toplabel{font-family:"Bricolage Grotesque";font-weight:800;font-size:17px;}
+  .stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:6px 22px;position:relative;}
+  .card{width:min(86vw,330px);aspect-ratio:5/7;border-radius:24px;background:#fff;color:#15131f;
+    box-shadow:0 26px 60px rgba(0,0,0,.42);overflow:hidden;display:flex;flex-direction:column;position:relative;
+    transition:transform .5s cubic-bezier(.2,.85,.25,1),opacity .4s ease;}
+  .card.swap{transform:translateY(26px) scale(.92);opacity:0;}
+  .chead{padding:18px 20px;color:#fff;display:flex;flex-direction:column;gap:2px;}
+  .chead .n{font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;opacity:.92;}
+  .chead .ttl{font-family:"Bricolage Grotesque";font-weight:800;font-size:26px;line-height:1;}
+  .h1{background:linear-gradient(135deg,#22c55e,#10b981);}
+  .h2{background:linear-gradient(135deg,#f59e0b,#f43f5e);}
+  .h3{background:linear-gradient(135deg,#8b5cf6,#ec4899);}
+  .cbody{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:18px 22px 22px;text-align:center;}
+  .note{font-size:74px;line-height:1;filter:grayscale(.1);opacity:.9;}
+  .play{width:96px;height:96px;border-radius:50%;border:none;cursor:pointer;color:#fff;font-size:40px;
+    background:linear-gradient(135deg,#7c3aed,#2563eb);box-shadow:0 14px 30px rgba(124,58,237,.45);
+    display:flex;align-items:center;justify-content:center;transition:transform .15s;}
+  .play:active{transform:scale(.93);}
+  .bar{width:78%;height:7px;border-radius:4px;background:#e7e7ef;overflow:hidden;}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c3aed,#2563eb);border-radius:4px;}
+  .count{font-size:13px;font-weight:600;color:#8b8a98;letter-spacing:.03em;}
+  .hint{font-size:14px;color:#8b8a98;font-weight:500;min-height:18px;}
+  /* revealed */
+  .art{width:150px;height:150px;border-radius:16px;object-fit:cover;box-shadow:0 12px 26px rgba(0,0,0,.22);background:#eee;}
+  .ans-a{font-family:"Bricolage Grotesque";font-weight:800;font-size:24px;line-height:1.05;}
+  .ans-t{font-size:17px;font-weight:600;color:#3a3850;}
+  .ans-y{display:inline-block;margin-top:2px;font-family:"Bricolage Grotesque";font-weight:800;font-size:14px;color:#fff;background:#15131f;border-radius:999px;padding:4px 12px;}
+  .controls{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;padding:6px 20px calc(22px + env(safe-area-inset-bottom));}
+  .btn{border:none;cursor:pointer;font-family:"Bricolage Grotesque";font-weight:700;font-size:15px;border-radius:38px;padding:14px 24px;transition:transform .15s,opacity .2s;}
+  .btn:active{transform:scale(.96);}
+  .btn.fill{background:#fff;color:#15131f;box-shadow:0 10px 26px rgba(0,0,0,.3);}
+  .btn.ghost{background:rgba(255,255,255,.14);color:#fff;}
+  .btn[disabled]{opacity:.4;pointer-events:none;}
+  .ver{position:fixed;right:8px;bottom:6px;z-index:50;font-size:10px;color:rgba(255,255,255,.32);pointer-events:none;}
+</style>
+</head>
+<body>
+<div class="ver">blindtest v1</div>
+<div class="blob a"></div><div class="blob b"></div>
+<div id="app">
+
+  <section id="home" class="screen active">
+    <div class="brand">Blind&nbsp;test</div>
+    <div class="sub">Années 90 · devine la chanson</div>
+    <div class="levels">
+      <button class="lvl lvl1" data-lvl="1"><span class="emoji">🟢</span><span><span class="n">Niveau 1</span><b>Les tubes</b></span></button>
+      <button class="lvl lvl2" data-lvl="2"><span class="emoji">🟡</span><span><span class="n">Niveau 2</span><b>Faut suivre</b></span></button>
+      <button class="lvl lvl3" data-lvl="3"><span class="emoji">🔴</span><span><span class="n">Niveau 3</span><b>Les pointus</b></span></button>
+    </div>
+  </section>
+
+  <section id="game" class="screen">
+    <div class="topbar">
+      <button id="back" class="icon-btn" aria-label="Retour">←</button>
+      <div class="toplabel">Blind test 90s</div>
+      <button id="reshuffle" class="icon-btn" aria-label="Mélanger" title="Mélanger">⤬</button>
+    </div>
+    <div class="stage">
+      <div id="card" class="card">
+        <div class="chead h1"><span class="n">Niveau 1</span><span class="ttl">Chanson mystère</span></div>
+        <div class="cbody" id="cbody"></div>
+      </div>
+    </div>
+    <div class="controls" id="controls"></div>
+  </section>
+
+</div>
+
+<audio id="player" preload="none" playsinline></audio>
+
+<script>
+  const SONGS={"1": [{"id": 1440783625, "a": "Nirvana", "t": "Smells Like Teen Spirit", "y": "1991"}, {"id": 1573849255, "a": "Spice Girls", "t": "Wannabe", "y": "1996"}, {"id": 533020725, "a": "Backstreet Boys", "t": "Everybody", "y": "1997"}, {"id": 337999674, "a": "Britney Spears", "t": "...Baby One More Time", "y": "1998"}, {"id": 388151901, "a": "Whitney Houston", "t": "I Will Always Love You", "y": "1992"}, {"id": 1481507900, "a": "Céline Dion", "t": "My Heart Will Go On", "y": "1997"}, {"id": 258647008, "a": "Los del Río", "t": "Macarena", "y": "1995"}, {"id": 1440768563, "a": "Aqua", "t": "Barbie Girl", "y": "1997"}, {"id": 716691562, "a": "Vanilla Ice", "t": "Ice Ice Baby", "y": "1990"}, {"id": 1517447333, "a": "Oasis", "t": "Wonderwall", "y": "1995"}, {"id": 959563977, "a": "Ace of Base", "t": "All That She Wants", "y": "1992"}, {"id": 192822739, "a": "Ricky Martin", "t": "Livin' la Vida Loca", "y": "1999"}], "2": [{"id": 270246724, "a": "TLC", "t": "Waterfalls", "y": "1994"}, {"id": 1031419968, "a": "Alanis Morissette", "t": "Ironic", "y": "1995"}, {"id": 1440945283, "a": "R.E.M.", "t": "Losing My Religion", "y": "1991"}, {"id": 286006506, "a": "Natalie Imbruglia", "t": "Torn", "y": "1997"}, {"id": 1440718913, "a": "No Doubt", "t": "Don't Speak", "y": "1995"}, {"id": 1440790544, "a": "Hanson", "t": "MMMBop", "y": "1997"}, {"id": 713773457, "a": "Chumbawamba", "t": "Tubthumping", "y": "1997"}, {"id": 1318383098, "a": "Lou Bega", "t": "Mambo No. 5", "y": "1999"}, {"id": 1828830887, "a": "The Cranberries", "t": "Zombie", "y": "1994"}, {"id": 1440651211, "a": "Sheryl Crow", "t": "All I Wanna Do", "y": "1993"}, {"id": 726416473, "a": "Blur", "t": "Song 2", "y": "1997"}, {"id": 1629185307, "a": "Sinéad O'Connor", "t": "Nothing Compares 2 U", "y": "1990"}], "3": [{"id": 1440885120, "a": "The Verve", "t": "Bitter Sweet Symphony", "y": "1997"}, {"id": 786107630, "a": "Jamiroquai", "t": "Virtual Insanity", "y": "1996"}, {"id": 1440653206, "a": "Portishead", "t": "Glory Box", "y": "1994"}, {"id": 715864380, "a": "Massive Attack", "t": "Unfinished Sympathy", "y": "1991"}, {"id": 697240266, "a": "Air", "t": "Sexy Boy", "y": "1998"}, {"id": 1589188119, "a": "Pavement", "t": "Cut Your Hair", "y": "1994"}, {"id": 1442912734, "a": "Garbage", "t": "Only Happy When It Rains", "y": "1995"}, {"id": 409161971, "a": "Cornershop", "t": "Brimful of Asha", "y": "1997"}, {"id": 1479614890, "a": "Sneaker Pimps", "t": "6 Underground", "y": "1996"}, {"id": 254347756, "a": "CAKE", "t": "The Distance", "y": "1996"}, {"id": 1440636710, "a": "Beck", "t": "Loser", "y": "1993"}, {"id": 714366406, "a": "The Chemical Brothers", "t": "Block Rockin' Beats", "y": "1997"}]};
+  const LBL={1:["Les tubes","h1","Niveau 1"],2:["Faut suivre","h2","Niveau 2"],3:["Les pointus","h3","Niveau 3"]};
+  const $=id=>document.getElementById(id);
+  const audio=$('player');
+  let queue=[], idx=0, level=1, cur=null, raf=null, playing=false, revealed=false;
+
+  /* ---- iTunes lookup (JSONP) : extrait + pochette frais ---- */
+  let jn=0;
+  function lookup(id){
+    return new Promise((res,rej)=>{
+      const cb='__it'+(++jn); const s=document.createElement('script');
+      const done=ok=>{ try{delete window[cb];}catch(e){} s.remove(); };
+      window[cb]=d=>{ const r=d&&d.results&&d.results[0]; done(); r?res(r):rej(); };
+      s.onerror=()=>{ done(); rej(); };
+      s.src='https://itunes.apple.com/lookup?id='+id+'&country=CA&callback='+cb;
+      document.head.appendChild(s);
+      setTimeout(()=>{ if(window[cb]){ done(); rej(); } }, 9000);
+    });
+  }
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function startLevel(L){
+    level=L; queue=shuffle(SONGS[L]); idx=0;
+    $('home').classList.remove('active'); $('game').classList.add('active');
+    $('card').querySelector('.chead').className='chead '+LBL[L][1];
+    $('card').querySelector('.n').textContent=LBL[L][0];
+    drawNext();
+  }
+  function backHome(){ stopAudio(); $('game').classList.remove('active'); $('home').classList.add('active'); }
+
+  function stopAudio(){ try{audio.pause();}catch(e){} playing=false; if(raf)cancelAnimationFrame(raf); raf=null; }
+
+  function setControls(html){ $('controls').innerHTML=html; }
+  function swapCard(fn){ const c=$('card'); c.classList.add('swap'); setTimeout(()=>{ fn(); c.classList.remove('swap'); },360); }
+
+  function drawNext(){
+    stopAudio(); revealed=false;
+    if(idx>=queue.length){ endScreen(); return; }
+    cur=queue[idx]; idx++;
+    swapCard(()=>{
+      $('card').querySelector('.ttl').textContent='Chanson mystère';
+      $('cbody').innerHTML='<div class="note">♪</div><div class="count">'+idx+' / '+queue.length+'</div><div class="hint">Chargement de l’extrait…</div>';
+      setControls('<button class="btn ghost" disabled>Révéler</button><button class="btn fill" id="next">Suivante</button>');
+      $('next').onclick=drawNext;
+      cur.preview=null; cur.art=null;
+      lookup(cur.id).then(r=>{
+        cur.preview=r.previewUrl; cur.art=(r.artworkUrl100||'').replace('100x100','400x400');
+        if(cur===queue[idx-1]) renderReady();
+      }).catch(()=>{ if(cur===queue[idx-1]) $('cbody').querySelector('.hint').textContent='Extrait indisponible — passe à la suivante.'; });
+      // prefetch next
+      if(queue[idx]) lookup(queue[idx].id).then(r=>{ queue[idx].preview=r.previewUrl; queue[idx].art=(r.artworkUrl100||'').replace('100x100','400x400'); }).catch(()=>{});
+    });
+  }
+
+  function renderReady(){
+    revealed=false;
+    $('cbody').innerHTML='<button class="play" id="play">▶</button><div class="bar"><i id="prog"></i></div><div class="count">'+idx+' / '+queue.length+'</div><div class="hint">Touche pour écouter (30 s)</div>';
+    setControls('<button class="btn ghost" id="reveal">Révéler</button><button class="btn fill" id="next">Suivante</button>');
+    $('play').onclick=togglePlay; $('reveal').onclick=reveal; $('next').onclick=drawNext;
+  }
+
+  function togglePlay(){
+    if(!cur||!cur.preview) return;
+    if(playing){ audio.pause(); playing=false; $('play').textContent='▶'; if(raf)cancelAnimationFrame(raf); return; }
+    if(audio.src!==cur.preview) audio.src=cur.preview;
+    audio.play().then(()=>{ playing=true; $('play').textContent='⏸'; tick(); }).catch(()=>{ const h=$('cbody').querySelector('.hint'); if(h)h.textContent='Lecture bloquée — retouche le bouton.'; });
+  }
+  function tick(){
+    const p=$('prog'); if(!p) return;
+    const d=audio.duration||30; p.style.width=Math.min(100,(audio.currentTime/d)*100).toFixed(1)+'%';
+    if(audio.ended||audio.paused){ playing=false; const b=$('play'); if(b)b.textContent='▶'; return; }
+    raf=requestAnimationFrame(tick);
+  }
+  audio.addEventListener('ended',()=>{ playing=false; const b=$('play'); if(b)b.textContent='↺'; });
+
+  function reveal(){
+    if(!cur) return; revealed=true;
+    $('card').querySelector('.ttl').textContent='Réponse';
+    const art=cur.art?'<img class="art" src="'+cur.art+'" alt="">':'<div class="note">🎵</div>';
+    $('cbody').innerHTML=art+'<div><div class="ans-a">'+esc(cur.a)+'</div><div class="ans-t">'+esc(cur.t)+'</div></div><div class="ans-y">'+esc(cur.y)+'</div>';
+    setControls('<button class="btn ghost" id="replay">▶ Réécouter</button><button class="btn fill" id="next">Suivante</button>');
+    $('replay').onclick=()=>{ if(audio.src!==cur.preview)audio.src=cur.preview; audio.currentTime=0; audio.play().then(()=>{playing=true;}).catch(()=>{}); };
+    $('next').onclick=drawNext;
+  }
+
+  function endScreen(){
+    stopAudio();
+    $('card').querySelector('.ttl').textContent='Terminé !';
+    $('cbody').innerHTML='<div class="note">🎉</div><div class="hint">Toutes les chansons du niveau sont passées.</div>';
+    setControls('<button class="btn ghost" id="home2">Niveaux</button><button class="btn fill" id="again">Rejouer ce niveau</button>');
+    $('again').onclick=()=>startLevel(level); $('home2').onclick=backHome;
+  }
+
+  function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  document.querySelectorAll('.lvl').forEach(b=>b.onclick=()=>startLevel(+b.dataset.lvl));
+  $('back').onclick=backHome;
+  $('reshuffle').onclick=()=>startLevel(level);
+</script>
+</body>
+</html>
