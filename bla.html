@@ -29,6 +29,8 @@
     --s3a:#b162ff; --s3b:#ff5fb0;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  @property --bg1{ syntax:'<color>'; inherits:true; initial-value:#1a1d4a; }
+  @property --bg2{ syntax:'<color>'; inherits:true; initial-value:#101b3c; }
   html,body{height:100%;overflow:hidden;}
   body{
     font-family:"Archivo",sans-serif;color:#fff;
@@ -36,12 +38,13 @@
       radial-gradient(60% 50% at 18% 12%, rgba(255,95,176,.30) 0%, transparent 55%),
       radial-gradient(60% 50% at 86% 84%, rgba(54,183,245,.32) 0%, transparent 55%),
       linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 52%, #163a63 100%);
+    transition:--bg1 .55s ease, --bg2 .55s ease;
     user-select:none;
   }
   #app{height:100dvh;display:flex;flex-direction:column;position:relative;}
 
   /* floating background blobs */
-  .blob{position:fixed;border-radius:50%;filter:blur(60px);opacity:.45;z-index:0;}
+  .blob{position:fixed;border-radius:50%;filter:blur(60px);opacity:.45;z-index:0;transition:background .55s ease;}
   .blob.a{width:42vmax;height:42vmax;left:-12vmax;top:-10vmax;background:#ff5fb0;animation:drift1 18s ease-in-out infinite;}
   .blob.b{width:38vmax;height:38vmax;right:-12vmax;bottom:-12vmax;background:#36b7f5;animation:drift2 22s ease-in-out infinite;}
   /* tapis de jeu : une couleur de fond par mode */
@@ -199,7 +202,7 @@
 </style>
 </head>
 <body>
-<div class="ver">v17 · couples</div>
+<div class="ver">v18 · couples</div>
 <div class="blob a"></div><div class="blob b"></div>
 <div id="app">
 
