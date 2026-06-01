@@ -156,8 +156,8 @@
   .fbody::-webkit-scrollbar{width:0;}
   .fq{font-family:"Bricolage Grotesque";font-weight:500;color:var(--ink);text-align:center;
     font-size:clamp(15px,4vw,19px);line-height:1.42;text-wrap:balance;}
-  .fq .w{display:inline-block;opacity:0;transform:translateY(7px);}
-  .card.flipped .fq .w{animation:wordIn .34s forwards;}
+  .fq .w{display:inline-block;}
+  .card.flipped .fq{animation:fade .15s ease;}
   @keyframes wordIn{to{opacity:1;transform:none;}}
   .ffoot{padding:11px;font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--muted);
     text-align:center;border-top:1px solid #eef0f4;}
@@ -201,7 +201,7 @@
 </style>
 </head>
 <body>
-<div class="ver">v14 · couples</div>
+<div class="ver">v15 · couples</div>
 <div class="blob a"></div><div class="blob b"></div>
 <div id="app">
 
@@ -870,12 +870,7 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
   function renderQ(el,text){
     /* resserrement : pas d'espace (insécable comprise) avant ? ! : ; » ni après « */
     text=text.replace(/\s+([?!:;»])/g,'$1').replace(/«\s+/g,'«');
-    const q=el.querySelector('.fq'); q.innerHTML='';
-    text.split(' ').forEach((w,k,arr)=>{
-      const s=document.createElement('span'); s.className='w'; s.textContent=w;
-      s.style.animationDelay=(0.04+k*0.012)+'s';
-      q.appendChild(s); if(k<arr.length-1) q.appendChild(document.createTextNode(' '));
-    });
+    el.querySelector('.fq').textContent=text;   /* instantané, sans cascade */
   }
   function lcFirst(s){ const m=s.match(/^(\s*[«"'(]?)([A-Za-zÀ-ÿ])([\s\S]*)$/); return m ? m[1]+m[2].toLowerCase()+m[3] : s; }
   function fill(el,person,q,partner){
