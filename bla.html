@@ -202,7 +202,7 @@
 </style>
 </head>
 <body>
-<div class="ver">v18 · couples</div>
+<div class="ver">v19 · couples</div>
 <div class="blob a"></div><div class="blob b"></div>
 <div id="app">
 
@@ -1029,53 +1029,59 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
     const C='translate(-50%,-50%) ';
     const rnd=(a,b)=>a+Math.random()*(b-a);
     const live=fanList();
+    const n=live.length, mid=Math.ceil(n/2);
+    cards.forEach(el=>{ if(el._dead) el.style.opacity='0'; });
 
-    /* Phase 1 — rassemblement en pile centrale (un peu de vie) */
-    cards.forEach(el=>{
-      el.style.transition='transform .42s cubic-bezier(.5,0,.4,1), opacity .3s ease';
-      el.style.transform=C+'translate('+rnd(-7,7).toFixed(1)+'px,'+rnd(-7,7).toFixed(1)+'px) rotate('+rnd(-4,4).toFixed(1)+'deg) scale(.95)';
-      el.style.zIndex=100;
-      if(el._dead) el.style.opacity='0';
+    /* 1 — les cartes se rassemblent en une pile centrale (chacune garde son graphisme) */
+    live.forEach((el,k)=>{
+      el.style.transition='transform .42s cubic-bezier(.5,0,.4,1)';
+      el.style.transform=C+'translate('+rnd(-3,3).toFixed(1)+'px,'+(k*0.3).toFixed(1)+'px) rotate('+rnd(-3,3).toFixed(1)+'deg)';
+      el.style.zIndex=k;
     });
 
-    /* Phase 2 — la coupe : deux paquets, gauche et droite */
+    /* 2 — la coupe : deux demi-paquets s'écartent (ordre conservé) */
     setTimeout(()=>{
       live.forEach((el,k)=>{
-        const left=k%2===0;
-        const dx=(left?rnd(-98,-66):rnd(66,98)).toFixed(1);
-        const rot=(left?rnd(-13,-6):rnd(6,13)).toFixed(1);
-        const dy=rnd(-12,12).toFixed(1);
-        el.style.transition='transform .5s cubic-bezier(.3,.8,.3,1) '+(k*0.006).toFixed(3)+'s';
-        el.style.transform=C+'translate('+dx+'px,'+dy+'px) rotate('+rot+'deg)';
-        el.style.zIndex=200+k;
+        const left=k<mid;
+        const dx=left?rnd(-86,-70):rnd(70,86);
+        const rot=left?rnd(-9,-5):rnd(5,9);
+        const stackY=(left?k:(k-mid))*0.5;
+        el.style.transition='transform .46s cubic-bezier(.3,.8,.3,1)';
+        el.style.transform=C+'translate('+dx.toFixed(1)+'px,'+stackY.toFixed(1)+'px) rotate('+rot.toFixed(1)+'deg)';
+        el.style.zIndex=k;
       });
     }, 460);
 
-    /* Phase 3 — le riffle : les deux paquets s'entremêlent au centre (c'est ici qu'on rebrasse l'ordre) */
+    /* 3 — le riffle : les deux paquets s'imbriquent au centre, en alternance */
+    const T3=460+500;
+    const st=Math.min(15, 480/Math.max(n,1));   /* ms entre chaque carte */
+    setTimeout(()=>{
+      const L=live.slice(0,mid), R=live.slice(mid);
+      const order=[]; let a=0,b=0;
+      while(a<L.length||b<R.length){ if(a<L.length) order.push(L[a++]); if(b<R.length) order.push(R[b++]); }
+      order.forEach((el,m)=>{
+        el.style.transition='transform .5s cubic-bezier(.4,.8,.25,1) '+(m*st/1000).toFixed(3)+'s';
+        el.style.transform=C+'translate('+rnd(-2,2).toFixed(1)+'px,'+(m*0.35).toFixed(1)+'px) rotate('+rnd(-2,2).toFixed(1)+'deg)';
+        el.style.zIndex=m;
+      });
+    }, T3);
+
+    /* 4 — rebrassage réel UNIQUEMENT une fois empilé (donc invisible) puis farandole */
+    const riffleTotal=500+(n-1)*st;
     setTimeout(()=>{
       for(let i=cards.length-1;i>0;i--){ const j=rand(i+1); [cards[i],cards[j]]=[cards[j],cards[i]]; }
       computeVis(); setBacks();
-      fanList().forEach((el,k)=>{
-        const dy=((k%2)?-1:1)*rnd(2,10);
-        el.style.transition='transform .54s cubic-bezier(.4,.8,.25,1) '+(k*0.014).toFixed(3)+'s';
-        el.style.transform=C+'translate('+rnd(-5,5).toFixed(1)+'px,'+dy.toFixed(1)+'px) rotate('+rnd(-3,3).toFixed(1)+'deg)';
-        el.style.zIndex=300+k;
-      });
-    }, 460+540);
-
-    /* Phase 4 — redéploiement en farandole (plus lent) */
-    setTimeout(()=>{
       const f=fanList();
-      const d=Math.min(0.06, 1.0/Math.max(vis,1)), c=(vis-1)/2; let maxDelay=0;
+      const d=Math.min(0.05, 0.9/Math.max(vis,1)), c=(vis-1)/2; let maxDelay=0;
       f.forEach((el,k)=>{
         const delay=(c-Math.abs(k-c))*d; if(delay>maxDelay) maxDelay=delay;
-        el.style.transition='transform .72s cubic-bezier(.2,.85,.25,1) '+delay.toFixed(3)+'s, opacity .5s ease '+delay.toFixed(3)+'s';
+        el.style.transition='transform .66s cubic-bezier(.2,.85,.25,1) '+delay.toFixed(3)+'s, opacity .45s ease '+delay.toFixed(3)+'s';
         const p=poseOf(k); el.style.transform=p.t; el.style.zIndex=p.z; el.style.opacity=''; el.style.pointerEvents='';
       });
       cards.forEach(el=>{ if(el._dead){ el.style.transition='opacity .3s ease'; el.style.opacity='0'; el.style.pointerEvents='none'; } });
       showPrompt();
-      setTimeout(()=>{ cards.forEach(el=>{el.style.transition='';}); deck.classList.remove('piling'); animating=false; }, 780+maxDelay*1000);
-    }, 460+540+580);
+      setTimeout(()=>{ cards.forEach(el=>{el.style.transition='';}); deck.classList.remove('piling'); animating=false; }, 700+maxDelay*1000);
+    }, T3+riffleTotal+90);
   }
 
   $('another').onclick=()=>{ if(animating) return; anotherCard(); };   /* Une autre! : même joueur, carte préservée, pioche auto */
