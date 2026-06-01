@@ -87,11 +87,6 @@
   .row.drop{background:rgba(255,255,255,.10);border-radius:16px;}
   .row.drop .name{box-shadow:0 0 0 2px #fff;border-color:transparent;}
   .row.linked .name{box-shadow:0 0 0 2px var(--cc,#8b5cf6);border-color:transparent;}
-  .linkmode .name{pointer-events:none;}
-  .linkmode .row{cursor:pointer;}
-  .row.arm .name{box-shadow:0 0 0 2px #fff;}
-  .linkbtn{display:block;margin:12px auto 0;padding:9px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-family:"Archivo";font-weight:600;font-size:13px;cursor:pointer;transition:.15s;}
-  .linkbtn.on{background:#fff;color:#1b1a3a;border-color:transparent;}
   .lghost{position:fixed;z-index:9999;pointer-events:none;padding:13px 16px;border-radius:16px;background:#fff;color:#1b1a3a;font-family:"Bricolage Grotesque";font-weight:800;font-size:15px;box-shadow:0 14px 36px rgba(0,0,0,.45);transform:translate(-50%,-50%);max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   body.linking #setup{overflow:hidden;}
   .linkhint{font-size:11.5px;color:rgba(255,255,255,.55);text-align:center;margin-top:9px;line-height:1.6;}
@@ -206,7 +201,7 @@
 </style>
 </head>
 <body>
-<div class="ver">v11 · couples</div>
+<div class="ver">v12 · couples</div>
 <div class="blob a"></div><div class="blob b"></div>
 <div id="app">
 
@@ -650,9 +645,6 @@ var CHAUF_PAL=[GR('#e01e5a','#ff6b2e'),GR('#ff2e6e','#ff3d3d'),GR('#ff4d2e','#ff
   const rowsEl=$('rows');
   const MAXP=8;
   const COUPLE_COLORS=['#8b5cf6','#14b8a6','#f59e0b','#84cc16'];
-  let linkMode=false, armedRow=null;
-  function setLinkMode(on){ linkMode=on; document.body.classList.toggle('linkmode',on); rowsEl.querySelectorAll('.name').forEach(i=>{ i.readOnly=on; if(on) i.blur(); }); if(!on && armedRow){ armedRow.classList.remove('arm'); armedRow=null; } const b=document.getElementById('linkbtn'); if(b){ b.textContent = on?'✓ Terminé':'🔗 Lier les couples'; b.classList.toggle('on',on); } updateLinkHint(); }
-  function onPairTap(row){ if(row._link){ if(armedRow===row) armedRow=null; row.classList.remove('arm'); unlinkRow(row); return; } if(armedRow && armedRow!==row){ linkRows(armedRow,row); armedRow.classList.remove('arm'); armedRow=null; } else { if(armedRow) armedRow.classList.remove('arm'); armedRow=row; row.classList.add('arm'); updateLinkHint(); } }
   function unlinkRow(r){ const o=r&&r._link; [r,o].forEach(x=>{ if(!x) return; x._link=null; x.classList.remove('linked'); x.style.removeProperty('--cc'); delete x.dataset.cc; }); updateLinkHint(); saveSetup(); }
   function linkRows(a,b){ if(!a||!b||a===b) return; if(a._link===b){ unlinkRow(a); return; } unlinkRow(a); unlinkRow(b); const used=new Set([...rowsEl.querySelectorAll('.row.linked')].map(r=>r.dataset.cc)); const color=COUPLE_COLORS.find(c=>!used.has(c))||COUPLE_COLORS[0]; a._link=b; b._link=a; [a,b].forEach(r=>{ r.classList.add('linked'); r.style.setProperty('--cc',color); r.dataset.cc=color; }); updateLinkHint(); saveSetup(); }
   function rowUnder(x,y,exclude){ const els=document.elementsFromPoint(x,y); for(const el of els){ const r=el.closest?el.closest('.row'):null; if(r&&r!==exclude&&rowsEl.contains(r)) return r; } let hit=null; rowsEl.querySelectorAll('.row').forEach(r=>{ if(r===exclude)return; const b=r.getBoundingClientRect(); if(x>=b.left&&x<=b.right&&y>=b.top&&y<=b.bottom) hit=r; }); return hit; }
