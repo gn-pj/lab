@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pong — Labo gn</title>
+<meta name="description" content="Le grand classique de 1972, version labo. Solo contre l'IA ou à deux.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f3eee2;
+    --paper-2:#ece5d4;
+    --ink:#1c1a15;
+    --ink-soft:#5b5648;
+    --accent:#bb4d2e;
+    --line:#cdc4ad;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Fraunces",Georgia,serif;
+    min-height:100vh;min-height:100dvh;
+    display:flex;flex-direction:column;align-items:center;
+    overflow:hidden;
+    position:relative;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:none;
+  }
+  /* paper grain */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  header{
+    width:100%;max-width:880px;padding:18px clamp(16px,5vw,32px) 10px;
+    display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+    position:relative;z-index:3;
+  }
+  .kicker{
+    font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--ink-soft);
+  }
+  .kicker .dot{color:var(--accent)}
+  .back{
+    font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-soft);text-decoration:none;
+    border-bottom:1px solid transparent;transition:border-color .2s,color .2s;
+  }
+  .back:hover{color:var(--accent);border-color:var(--accent)}
+
+  .stage{
+    flex:1;width:100%;display:flex;align-items:center;justify-content:center;
+    padding:6px clamp(10px,4vw,28px) 22px;position:relative;z-index:2;min-height:0;
+  }
+  .court-wrap{position:relative;width:100%;max-width:880px}
+  canvas{
+    display:block;width:100%;height:auto;border-radius:4px;
+    background:var(--ink);
+    box-shadow:0 18px 40px -22px rgba(28,26,21,.7), 0 2px 0 0 var(--line);
+    cursor:none;
+  }
+
+  /* overlay (start / pause / game over) */
+  .overlay{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:20px;text-align:center;
+    background:rgba(28,26,21,.82);backdrop-filter:blur(3px);
+    border-radius:4px;color:var(--paper);padding:24px;
+    transition:opacity .25s ease;
+  }
+  .overlay.hidden{opacity:0;pointer-events:none}
+  .overlay h2{
+    font-size:clamp(34px,9vw,68px);font-weight:900;line-height:.9;letter-spacing:-.02em;
+  }
+  .overlay h2 em{font-style:italic;font-weight:500;color:var(--accent)}
+  .overlay p{
+    font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.06em;
+    color:#cdc4ad;max-width:30ch;line-height:1.7;text-transform:uppercase;
+  }
+  .modes{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{
+    font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:500;
+    letter-spacing:.1em;text-transform:uppercase;
+    background:var(--paper);color:var(--ink);border:none;border-radius:3px;
+    padding:14px 22px;cursor:pointer;transition:transform .15s,background .2s;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn.accent{background:var(--accent);color:var(--paper)}
+  .btn.ghost{background:transparent;color:var(--paper);border:1.5px solid #6b6555}
+  .btn.ghost:hover{border-color:var(--paper)}
+
+  .hint{
+    font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-soft);text-align:center;
+    padding:0 16px 18px;position:relative;z-index:3;
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+  <header>
+    <span class="kicker">Pong <span class="dot">●</span> objet jouable</span>
+    <a class="back" href="index.html">← labo</a>
+  </header>
+
+  <div class="stage">
+    <div class="court-wrap">
+      <canvas id="court" width="880" height="560"></canvas>
+      <div class="overlay" id="overlay">
+        <h2>Le&nbsp;<em>Pong</em></h2>
+        <p id="ovText">Premier à 11 points.<br>Choisis ton camp.</p>
+        <div class="modes" id="modes">
+          <button class="btn accent" data-mode="ai">Solo · vs IA</button>
+          <button class="btn ghost" data-mode="2p">2 joueurs</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hint" id="hint">Gauche : W / S &nbsp;·&nbsp; Droite : ↑ / ↓ &nbsp;·&nbsp; Tactile : glisse de chaque côté &nbsp;·&nbsp; P : pause</div>
+
+<script>
+(function(){
+  const cv = document.getElementById('court');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const overlay = document.getElementById('overlay');
+  const ovText = document.getElementById('ovText');
+  const modesEl = document.getElementById('modes');
+  const hintEl = document.getElementById('hint');
+
+  const WIN = 11;
+  const PAD_W = 14, PAD_H = 92, PAD_OFF = 26;
+  const BALL_R = 9;
+
+  const COL = {
+    paper:'#f3eee2', ink:'#1c1a15', accent:'#bb4d2e',
+    soft:'#8c836d', line:'#3a362c'
+  };
+
+  let state = 'menu';        // menu | playing | paused | over
+  let mode = 'ai';           // ai | 2p
+
+  const L = { x:PAD_OFF, y:H/2-PAD_H/2, score:0, vy:0 };
+  const R = { x:W-PAD_OFF-PAD_W, y:H/2-PAD_H/2, score:0, vy:0 };
+  const ball = { x:W/2, y:H/2, vx:0, vy:0, sp:6 };
+
+  const keys = {};
+  let serveDir = 1;
+  let lastServer = 0;
+
+  function resetBall(dir){
+    ball.x = W/2; ball.y = H/2; ball.sp = 6;
+    const ang = (Math.random()*0.5 - 0.25) * Math.PI; // -45°..45°
+    ball.vx = Math.cos(ang) * ball.sp * dir;
+    ball.vy = Math.sin(ang) * ball.sp;
+  }
+
+  function newGame(m){
+    mode = m;
+    L.score = 0; R.score = 0;
+    L.y = R.y = H/2 - PAD_H/2;
+    serveDir = (Math.random()<.5)?-1:1;
+    resetBall(serveDir);
+    state = 'playing';
+    overlay.classList.add('hidden');
+    hintEl.textContent = mode==='ai'
+      ? 'Toi (gauche) : W / S ou ↑ / ↓ · glisse pour bouger · P : pause'
+      : 'Gauche : W / S · Droite : ↑ / ↓ · glisse de chaque côté · P : pause';
+  }
+
+  function showMenu(html, btns){
+    state = (btns? 'menu':'over');
+    ovText.innerHTML = html;
+    modesEl.innerHTML = btns;
+    overlay.classList.remove('hidden');
+  }
+
+  // ---- input: keyboard ----
+  addEventListener('keydown', e=>{
+    keys[e.key.toLowerCase()] = true;
+    if(e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault();
+    if((e.key==='p'||e.key==='P')) togglePause();
+  });
+  addEventListener('keyup', e=>{ keys[e.key.toLowerCase()] = false; });
+
+  function togglePause(){
+    if(state==='playing'){ state='paused'; showOverlayPause(); }
+    else if(state==='paused'){ state='playing'; overlay.classList.add('hidden'); }
+  }
+  function showOverlayPause(){
+    ovText.innerHTML = 'Pause.';
+    modesEl.innerHTML = '<button class="btn accent" id="resume">Reprendre</button>'+
+                        '<button class="btn ghost" id="quit">Menu</button>';
+    overlay.classList.remove('hidden');
+    document.getElementById('resume').onclick = ()=>{ state='playing'; overlay.classList.add('hidden'); };
+    document.getElementById('quit').onclick = mainMenu;
+  }
+
+  // ---- input: pointer / touch (split court) ----
+  const targets = { L:null, R:null };
+  function pointerMove(clientX, clientY){
+    const r = cv.getBoundingClientRect();
+    const x = (clientX - r.left) / r.width * W;
+    const y = (clientY - r.top) / r.height * H;
+    const yc = Math.max(PAD_H/2, Math.min(H-PAD_H/2, y)) - PAD_H/2;
+    if(mode==='2p'){
+      if(x < W/2) targets.L = yc; else targets.R = yc;
+    } else {
+      targets.L = yc; // solo: any touch controls the left paddle
+    }
+  }
+  cv.addEventListener('pointerdown', e=>{ pointerMove(e.clientX,e.clientY); });
+  cv.addEventListener('pointermove', e=>{ if(e.pressure>0||e.buttons||e.pointerType!=='mouse') pointerMove(e.clientX,e.clientY); });
+  cv.addEventListener('mousemove', e=>{ pointerMove(e.clientX,e.clientY); });
+
+  // ---- overlay buttons ----
+  modesEl.addEventListener('click', e=>{
+    const b = e.target.closest('button[data-mode]');
+    if(b) newGame(b.dataset.mode);
+  });
+
+  function mainMenu(){
+    state='menu';
+    showMenu('Premier à 11 points.<br>Choisis ton camp.',
+      '<button class="btn accent" data-mode="ai">Solo · vs IA</button>'+
+      '<button class="btn ghost" data-mode="2p">2 joueurs</button>');
+  }
+
+  // ---- physics ----
+  const PAD_SPEED = 8.2;
+  function movePaddle(p, up, down){
+    if(up) p.y -= PAD_SPEED;
+    if(down) p.y += PAD_SPEED;
+    p.y = Math.max(0, Math.min(H-PAD_H, p.y));
+  }
+
+  function aiMove(){
+    // predictive but imperfect: aim with a deadzone + capped speed
+    const target = ball.y - PAD_H/2;
+    const diff = target - R.y;
+    const max = 6.4;
+    if(Math.abs(diff) > 10){
+      R.y += Math.max(-max, Math.min(max, diff*0.12));
+    }
+    R.y = Math.max(0, Math.min(H-PAD_H, R.y));
+  }
+
+  function collide(p, side){
+    // side: -1 left paddle, +1 right paddle
+    const within = ball.y > p.y - BALL_R && ball.y < p.y + PAD_H + BALL_R;
+    if(!within) return false;
+    const edge = side<0 ? p.x + PAD_W : p.x;
+    const hit = side<0 ? (ball.x - BALL_R <= edge && ball.x > edge - 18)
+                       : (ball.x + BALL_R >= edge && ball.x < edge + 18);
+    if(!hit) return false;
+    // reflect, add english based on where it struck the paddle
+    const rel = ((ball.y) - (p.y + PAD_H/2)) / (PAD_H/2); // -1..1
+    ball.sp = Math.min(ball.sp + 0.45, 15);
+    const ang = rel * (Math.PI*0.42);
+    ball.vx = Math.cos(ang) * ball.sp * (side<0?1:-1);
+    ball.vy = Math.sin(ang) * ball.sp;
+    ball.x = side<0 ? edge + BALL_R + 0.5 : edge - BALL_R - 0.5;
+    return true;
+  }
+
+  function point(scorer){
+    if(scorer==='L'){ L.score++; serveDir = 1; } else { R.score++; serveDir = -1; }
+    if(L.score>=WIN || R.score>=WIN){
+      const win = L.score>=WIN;
+      let msg;
+      if(mode==='ai') msg = win ? 'Gagné.<br>Tu bats la machine.' : 'Perdu.<br>La machine garde le point.';
+      else msg = win ? 'Joueur gauche l\'emporte.' : 'Joueur droite l\'emporte.';
+      showMenu(msg + '<br><span style="color:#bb4d2e">'+L.score+' — '+R.score+'</span>',
+        '<button class="btn accent" data-mode="'+mode+'">Rejouer</button>'+
+        '<button class="btn ghost" id="back">Menu</button>');
+      state='over';
+      const bk = document.getElementById('back'); if(bk) bk.onclick = mainMenu;
+    } else {
+      resetBall(serveDir);
+    }
+  }
+
+  function update(){
+    if(state!=='playing') return;
+
+    // left paddle
+    if(targets.L!=null){ L.y += (targets.L - L.y)*0.4; targets.L=null; L.y=Math.max(0,Math.min(H-PAD_H,L.y)); }
+    movePaddle(L, keys['w']|| (mode==='ai' && keys['arrowup']), keys['s']|| (mode==='ai' && keys['arrowdown']));
+
+    // right paddle
+    if(mode==='2p'){
+      if(targets.R!=null){ R.y += (targets.R - R.y)*0.4; targets.R=null; R.y=Math.max(0,Math.min(H-PAD_H,R.y)); }
+      movePaddle(R, keys['arrowup'], keys['arrowdown']);
+    } else {
+      aiMove();
+    }
+
+    // ball
+    ball.x += ball.vx; ball.y += ball.vy;
+    if(ball.y - BALL_R < 0){ ball.y = BALL_R; ball.vy *= -1; }
+    if(ball.y + BALL_R > H){ ball.y = H-BALL_R; ball.vy *= -1; }
+
+    collide(L, -1);
+    collide(R, +1);
+
+    if(ball.x < -20) point('R');
+    else if(ball.x > W+20) point('L');
+  }
+
+  // ---- render ----
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function draw(){
+    ctx.fillStyle = COL.ink;
+    ctx.fillRect(0,0,W,H);
+
+    // center net (dashed)
+    ctx.strokeStyle = COL.line;
+    ctx.lineWidth = 3;
+    ctx.setLineDash([12,16]);
+    ctx.beginPath(); ctx.moveTo(W/2,12); ctx.lineTo(W/2,H-12); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // scores
+    ctx.fillStyle = '#4a4538';
+    ctx.font = '700 76px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline='middle';
+    ctx.fillText(L.score, W/2-90, 70);
+    ctx.fillText(R.score, W/2+90, 70);
+
+    // paddles
+    ctx.fillStyle = COL.paper;
+    roundRect(L.x, L.y, PAD_W, PAD_H, 6); ctx.fill();
+    ctx.fillStyle = COL.accent;
+    roundRect(R.x, R.y, PAD_W, PAD_H, 6); ctx.fill();
+
+    // ball
+    ctx.fillStyle = COL.paper;
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI*2); ctx.fill();
+  }
+
+  function loop(){
+    update();
+    draw();
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>
+</body>
+</html>
