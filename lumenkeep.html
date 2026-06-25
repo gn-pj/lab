@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0c0a16">
+<title>LUMENKEEP — pixel défense</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+  html,body{width:100%;height:100%;overflow:hidden;background:#07060d;touch-action:none;overscroll-behavior:none}
+  body{font-family:"JetBrains Mono",monospace;color:#e7e0ff}
+  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#07060d}
+  canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:5;
+       padding:max(10px,env(safe-area-inset-top)) 12px max(10px,env(safe-area-inset-bottom));
+       display:flex;flex-direction:column;justify-content:space-between}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .stat{background:rgba(14,11,26,.66);border:1px solid rgba(140,110,220,.35);border-radius:10px;
+        padding:6px 9px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+        font-size:11px;letter-spacing:.04em;line-height:1.35;box-shadow:0 0 18px rgba(120,80,220,.12)}
+  .stat b{font-family:"Press Start 2P";font-size:11px;letter-spacing:0}
+  .stat .lab{display:block;font-size:8px;letter-spacing:.18em;color:#9b8fd0;text-transform:uppercase;margin-bottom:3px}
+  .hp{color:#7af5d0}.sh{color:#ffd27a}.wv{color:#ff8fd6}.lv{color:#7fb4ff}
+  .wavebanner{align-self:center;font-family:"Press Start 2P";font-size:13px;color:#ffe8a8;
+        text-shadow:0 0 14px rgba(255,180,80,.8),0 2px 0 #000;opacity:0;transition:opacity .3s;margin-top:6px}
+
+  /* ---------- Tower bar ---------- */
+  #towers{pointer-events:auto;display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
+  .tw{flex:1 1 0;min-width:64px;max-width:96px;background:rgba(14,11,26,.72);border:1.5px solid rgba(140,110,220,.3);
+      border-radius:12px;padding:8px 4px 6px;text-align:center;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
+      transition:transform .12s, border-color .15s, box-shadow .15s;position:relative}
+  .tw:active{transform:scale(.94)}
+  .tw .ic{width:24px;height:24px;margin:0 auto 4px;border-radius:6px;position:relative;
+          box-shadow:0 0 14px var(--g);background:var(--c)}
+  .tw .nm{font-family:"Press Start 2P";font-size:7px;color:#d8cffb;letter-spacing:0}
+  .tw .co{font-size:9px;color:#ffd27a;margin-top:3px}
+  .tw .co::before{content:"✦ "}
+  .tw.armed{border-color:var(--c);box-shadow:0 0 22px var(--g),inset 0 0 14px rgba(255,255,255,.08);transform:translateY(-3px)}
+  .tw.broke{opacity:.42}
+  .hint{position:absolute;left:0;right:0;bottom:100%;text-align:center;margin-bottom:6px;font-size:10px;
+        color:#cdbcff;text-shadow:0 0 8px #000;opacity:0;transition:opacity .2s;pointer-events:none}
+  .hint.on{opacity:1}
+
+  /* ---------- Modals ---------- */
+  .modal{position:fixed;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;
+         text-align:center;padding:30px 26px;background:radial-gradient(120% 80% at 50% 20%,rgba(40,24,70,.6),rgba(7,6,13,.92));
+         backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+  .modal.hidden{display:none}
+  .logo{font-family:"Press Start 2P";font-size:clamp(26px,9vw,46px);line-height:1.12;letter-spacing:1px;
+        color:#fff;text-shadow:0 0 26px rgba(120,245,208,.55),0 0 50px rgba(180,120,255,.4),0 4px 0 #2a1840}
+  .logo .a{color:#7af5d0}.logo .b{color:#ff8fd6}
+  .sub{margin-top:16px;font-size:12px;line-height:1.7;color:#c6bbf0;max-width:30ch}
+  .sub .k{color:#ffd27a}
+  .btn{pointer-events:auto;margin-top:26px;font-family:"Press Start 2P";font-size:13px;color:#0a0814;
+       background:linear-gradient(180deg,#9bf7dd,#54d6b4);border:none;border-radius:14px;padding:16px 30px;
+       box-shadow:0 0 30px rgba(120,245,208,.5),0 6px 0 #1f6b58;letter-spacing:1px;cursor:pointer;transition:transform .1s}
+  .btn:active{transform:translateY(3px);box-shadow:0 0 30px rgba(120,245,208,.5),0 3px 0 #1f6b58}
+  .tips{margin-top:22px;font-size:10.5px;color:#8e83bb;line-height:1.8;max-width:32ch}
+  .tips b{color:#bda9ff}
+  .go-stat{font-family:"Press Start 2P";font-size:11px;color:#ffd27a;margin-top:14px;line-height:1.8}
+  .credit{position:fixed;bottom:max(8px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;
+          font-size:8px;letter-spacing:.2em;color:#5a5280;z-index:9;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="cv"></canvas></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div>
+    <div class="top">
+      <div class="stat"><span class="lab">Cristal</span><b class="hp" id="uiHp">♥10</b></div>
+      <div class="stat"><span class="lab">Éclats</span><b class="sh" id="uiSh">120</b></div>
+      <div class="stat" style="text-align:right"><span class="lab">Vague</span><b class="wv" id="uiWv">1</b></div>
+    </div>
+    <div class="wavebanner" id="banner">VAGUE 1</div>
+  </div>
+  <div style="position:relative">
+    <div class="hint" id="hint">Touchez le terrain pour bâtir · re-touchez la tour pour annuler</div>
+    <div id="towers">
+      <button class="tw" data-t="0" style="--c:#ff7ad0;--g:rgba(255,120,208,.6)"><div class="ic"></div><div class="nm">PRISME</div><div class="co">30</div></button>
+      <button class="tw" data-t="1" style="--c:#ff7a2e;--g:rgba(255,140,50,.6)"><div class="ic"></div><div class="nm">BRASIER</div><div class="co">50</div></button>
+      <button class="tw" data-t="2" style="--c:#6ad0ff;--g:rgba(110,210,255,.6)"><div class="ic"></div><div class="nm">GIVRE</div><div class="co">45</div></button>
+      <button class="tw" data-t="3" style="--c:#b388ff;--g:rgba(180,140,255,.6)"><div class="ic"></div><div class="nm">FOUDRE</div><div class="co">60</div></button>
+    </div>
+  </div>
+</div>
+
+<!-- Start -->
+<div class="modal" id="start">
+  <div class="logo"><span class="a">LUMEN</span><span class="b">KEEP</span></div>
+  <div class="sub">Une bille de <span class="k">lumière</span>, des vagues d'ombre, et un cristal à défendre.<br>Casse-brique × Tower Defense.</div>
+  <button class="btn" id="play">JOUER</button>
+  <div class="tips"><b>Glisse</b> le doigt = bouge la raquette.<br><b>Touche</b> l'écran = lance la bille.<br>Choisis une <b>tour</b> en bas puis touche le terrain : elle dévie la bille et la charge en magie. Garde la bille vivante !</div>
+</div>
+
+<!-- Game over -->
+<div class="modal hidden" id="over">
+  <div class="logo" style="font-size:clamp(22px,7vw,38px)" id="overTitle">LE CRISTAL TOMBE</div>
+  <div class="go-stat" id="overStat"></div>
+  <button class="btn" id="again">REJOUER</button>
+</div>
+
+<div class="credit">Le labo · gn — pixel art</div>
+
+<script>
+"use strict";
+/* ====================================================================
+   LUMENKEEP — Arkanoid × Tower Defense, pixel 16-bit + éclairage 2D
+   Un seul fichier. Canvas low-res upscalé (nearest) pour le rendu pixel.
+   ==================================================================== */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+
+/* ---- Buffers low-res (monde + lumière) ---- */
+const BASE_W = 240;            // largeur virtuelle fixe -> pixels carrés
+let BASE_H = 426;              // recalculé selon l'écran
+const buf = document.createElement('canvas');
+const bx = buf.getContext('2d');
+const lbuf = document.createElement('canvas');   // light map
+const lx = lbuf.getContext('2d');
+
+let VIEW = {w:0,h:0,dpr:1};
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  VIEW.dpr = Math.min(window.devicePixelRatio||1, 2.5);
+  BASE_H = Math.max(360, Math.round(BASE_W * h / w));
+  buf.width = BASE_W; buf.height = BASE_H;
+  lbuf.width = BASE_W; lbuf.height = BASE_H;
+  cv.width = Math.round(w*VIEW.dpr); cv.height = Math.round(h*VIEW.dpr);
+  cv.style.width = w+'px'; cv.style.height = h+'px';
+  ctx.imageSmoothingEnabled = false;
+  VIEW.w = w; VIEW.h = h;
+  layoutWorld();
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', ()=>setTimeout(resize,200));
+
+/* ---- Palette 16-bit ---- */
+const PAL = {
+  orbCore:'#fff7da', orbGlow:'#ffd27a',
+  crystal:'#7af5d0', crystalDark:'#2f8f78',
+  paddle:'#e9cf94', paddleDark:'#8a6b3a', paddleRune:'#7af5d0',
+};
+const TOWERS = [
+  {key:'prisme', name:'Prisme',  cost:30, c:'#ff7ad0', g:'#ff7ad0', light:34},
+  {key:'brasier',name:'Brasier', cost:50, c:'#ff7a2e', g:'#ffb44d', light:40},
+  {key:'givre',  name:'Givre',   cost:45, c:'#6ad0ff', g:'#bff3ff', light:38},
+  {key:'foudre', name:'Foudre',  cost:60, c:'#b388ff', g:'#e6dbff', light:36},
+];
+const ENEMY = {
+  grunt:{hp:3,  r:7,  sp:9,  rew:6,  dmg:1, body:'#3a2350',hi:'#9b5bff',eye:'#ff4d6d'},
+  wisp: {hp:2,  r:5,  sp:20, rew:8,  dmg:1, body:'#13405a',hi:'#6ad0ff',eye:'#bff3ff'},
+  tank: {hp:14, r:11, sp:6,  rew:20, dmg:3, body:'#33264a',hi:'#7a5aa0',eye:'#ff8f3a'},
+  boss: {hp:90, r:20, sp:5,  rew:120,dmg:5, body:'#2a1640',hi:'#c46bff',eye:'#ff3d5d'},
+};
+
+/* ================= State ================= */
+let world = {};      // layout-derived geometry
+let G = null;        // game state
+let armed = -1;      // armed tower index, -1 = none
+let running = false;
+let lastT = 0, accT = 0, bannerT = 0, bannerTxt = '';
+let shake = 0, flash = 0, flashCol = '255,255,255';
+const stars = [];
+function seedStars(){ stars.length=0; for(let i=0;i<46;i++) stars.push({x:Math.random()*BASE_W,y:Math.random()*BASE_H*0.55,b:Math.random(),t:Math.random()*6}); }
+
+function layoutWorld(){
+  world = {
+    top: 0,
+    bottomUI: 96,                       // espace réservé sous le terrain pour les boutons HUD
+    get paddleY(){ return BASE_H - this.bottomUI - 18; },
+    get defLine(){ return BASE_H - this.bottomUI - 6; },   // ligne du cristal
+    wallL: 4, wallR: BASE_W-4,
+  };
+  if(G && G.paddle){ G.paddle.y = world.paddleY; G.paddle.x = clamp(G.paddle.x, world.wallL+G.paddle.w/2, world.wallR-G.paddle.w/2); }
+  seedStars();
+}
+
+/* ================= Helpers ================= */
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const rand=(a,b)=>a+Math.random()*(b-a);
+const dist2=(ax,ay,bx,by)=>{const dx=ax-bx,dy=ay-by;return dx*dx+dy*dy;};
+
+/* ================= Init / new game ================= */
+function newGame(){
+  G = {
+    hp: 10, shards: 120, wave: 0,
+    paddle: {x:BASE_W/2, y:world.paddleY, w:46, h:7, vx:0, lastx:BASE_W/2},
+    orbs: [], towers: [], enemies: [], parts: [], bolts: [],
+    spawnQ: [], spawnT: 0, betweenT: 2.0, inWave:false,
+    held:true, holdT:0,
+  };
+  serveOrb(true);
+  refreshHUD();
+}
+
+/* held=true: bille collée à la raquette en attente de lancement */
+function serveOrb(held){
+  G.orbs.push({ x:G.paddle.x, y:G.paddle.y-8, vx:0, vy:0, r:3.2,
+                fire:0, held:!!held, trail:[] });
+  G.held = !!held;
+}
+
+/* ================= Waves ================= */
+function startWave(){
+  G.wave++;
+  const w = G.wave;
+  const q = [];
+  const n = 6 + Math.floor(w*1.7);
+  for(let i=0;i<n;i++){
+    let t='grunt';
+    const r=Math.random();
+    if(w>=2 && r<0.28) t='wisp';
+    if(w>=3 && r>0.82) t='tank';
+    q.push({type:t, delay: rand(0.35,0.95)});
+  }
+  if(w%5===0){ q.push({type:'boss', delay:1.4}); }
+  G.spawnQ = q; G.spawnT = 0.6; G.inWave = true;
+  bannerTxt = (w%5===0? 'VAGUE '+w+' · BOSS':'VAGUE '+w); bannerT = 2.2;
+  refreshHUD();
+}
+
+function spawnEnemy(type){
+  const d = ENEMY[type];
+  const hpScale = 1 + (G.wave-1)*0.16;
+  const e = {
+    type, r:d.r, hp:Math.round(d.hp*hpScale), maxhp:Math.round(d.hp*hpScale),
+    x: rand(world.wallL+d.r+4, world.wallR-d.r-4),
+    y: -d.r-2, sp:d.sp, rew:d.rew, dmg:d.dmg,
+    wob: rand(0,6.28), wobsp: rand(0.6,1.5), wamp: type==='wisp'?22:8,
+    slow:0, burn:0, burnT:0, hit:0, baseX:0,
+  };
+  e.baseX = e.x;
+  G.enemies.push(e);
+}
+
+/* ================= Towers ================= */
+function tryBuild(px,py){
+  if(armed<0) return false;
+  const T = TOWERS[armed];
+  if(G.shards < T.cost) { pulseBtn(armed,true); return false; }
+  // zone constructible
+  if(py < 64 || py > world.paddleY-40) return false;
+  if(px < world.wallL+10 || px > world.wallR-10) return false;
+  // pas de chevauchement
+  for(const t of G.towers){ if(dist2(px,py,t.x,t.y) < 22*22) return false; }
+  for(const e of G.enemies){ if(dist2(px,py,e.x,e.y) < 18*18) return false; }
+  G.towers.push({ x:px, y:py, r:9, type:armed, cd:0, pulse:0, hp:5 });
+  G.shards -= T.cost;
+  flashCol = hexToRgb(T.c); flash = .25;
+  for(let i=0;i<14;i++) spark(px,py,T.c,rand(.4,1.2));
+  refreshHUD();
+  return true;
+}
+
+/* ================= Particles ================= */
+function spark(x,y,col,life){ if(G.parts.length>260) return;
+  G.parts.push({x,y,vx:rand(-40,40),vy:rand(-50,10),life,max:life,col,sz:rand(1,2.4),g:rand(20,70)}); }
+function burst(x,y,col,n,pow){ for(let i=0;i<n;i++){ const a=rand(0,6.28),s=rand(.2,pow);
+  G.parts.push({x,y,vx:Math.cos(a)*s*60,vy:Math.sin(a)*s*60,life:rand(.3,.8),max:.8,col,sz:rand(1,3),g:30}); } }
+
+/* ================= Input ================= */
+let pointer={down:false,id:null};
+function toBase(clientX,clientY){
+  const rx = clientX / VIEW.w * BASE_W;
+  const ry = clientY / VIEW.h * BASE_H;
+  return {x:rx,y:ry};
+}
+function onDown(x,y){
+  pointer.down=true;
+  const p=toBase(x,y);
+  if(armed>=0){
+    // construire si dans la zone, sinon désarmer
+    if(!tryBuild(p.x,p.y)){ /* clic hors zone: rien, reste armé */ }
+    return;
+  }
+  // lancer la bille tenue
+  let launched=false;
+  for(const o of G.orbs){ if(o.held){ launchOrb(o); launched=true; } }
+  if(launched) return;
+  // sinon: glisser la raquette (déjà géré par move)
+  moveTo(p.x);
+}
+function moveTo(bx){
+  const p=G.paddle; const nx=clamp(bx, world.wallL+p.w/2, world.wallR-p.w/2);
+  p.x=nx;
+}
+function onMove(x,y){
+  if(!pointer.down) return;
+  const p=toBase(x,y);
+  if(armed<0) moveTo(p.x);
+}
+function onUp(){ pointer.down=false; }
+
+cv.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];pointer.id=t.identifier;onDown(t.clientX,t.clientY);},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches){if(t.identifier===pointer.id){onMove(t.clientX,t.clientY);}}},{passive:false});
+cv.addEventListener('touchend',e=>{e.preventDefault();onUp();},{passive:false});
+cv.addEventListener('mousedown',e=>onDown(e.clientX,e.clientY));
+window.addEventListener('mousemove',e=>onMove(e.clientX,e.clientY));
+window.addEventListener('mouseup',onUp);
+
+function launchOrb(o){
+  o.held=false;
+  const ang = -Math.PI/2 + rand(-0.32,0.32);
+  const sp = 150;
+  o.vx=Math.cos(ang)*sp; o.vy=Math.sin(ang)*sp;
+}
+
+/* tower buttons */
+document.querySelectorAll('.tw').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const i=+btn.dataset.t;
+    armed = (armed===i? -1 : i);
+    syncArmed();
+  });
+});
+function syncArmed(){
+  document.querySelectorAll('.tw').forEach(b=>{
+    const i=+b.dataset.t;
+    b.classList.toggle('armed', i===armed);
+    b.classList.toggle('broke', G && G.shards<TOWERS[i].cost);
+  });
+  document.getElementById('hint').classList.toggle('on', armed>=0);
+}
+function pulseBtn(i,bad){ const b=document.querySelector('.tw[data-t="'+i+'"]'); if(b){b.animate([{transform:'scale(1)'},{transform:'scale(.9)'},{transform:'scale(1)'}],{duration:200});} }
+
+/* ================= HUD ================= */
+function refreshHUD(){
+  document.getElementById('uiHp').textContent='♥'+Math.max(0,G.hp);
+  document.getElementById('uiSh').textContent=G.shards;
+  document.getElementById('uiWv').textContent=G.wave||1;
+  syncArmed();
+}
+
+/* ================= Update ================= */
+function update(dt){
+  // raquette: vitesse pour effet sur la bille
+  const p=G.paddle; p.vx=(p.x-p.lastx)/Math.max(dt,1/120); p.lastx=p.x;
+
+  // bille(s) tenue(s) suivent la raquette
+  for(const o of G.orbs){ if(o.held){ o.x=p.x; o.y=p.y-8; } }
+
+  // spawn de vague
+  if(G.inWave){
+    if(G.spawnQ.length){
+      G.spawnT-=dt;
+      if(G.spawnT<=0){ const s=G.spawnQ.shift(); spawnEnemy(s.type); G.spawnT=s.delay; }
+    } else if(G.enemies.length===0){
+      G.inWave=false; G.betweenT=2.4;
+      G.shards += 18 + G.wave*4; refreshHUD();   // bonus de fin de vague
+    }
+  } else {
+    G.betweenT-=dt;
+    if(G.betweenT<=0) startWave();
+  }
+
+  updateOrbs(dt);
+  updateEnemies(dt);
+  updateTowers(dt);
+  updateParts(dt);
+  // éclairs
+  for(const b of G.bolts) b.life-=dt;
+  G.bolts=G.bolts.filter(b=>b.life>0);
+
+  if(bannerT>0) bannerT-=dt;
+  if(shake>0) shake=Math.max(0,shake-dt*3);
+  if(flash>0) flash=Math.max(0,flash-dt*2.5);
+
+  if(G.hp<=0) gameOver(false);
+}
+
+function updateOrbs(dt){
+  for(const o of G.orbs){
+    if(o.held) continue;
+    // sous-pas pour éviter le tunneling
+    const steps=Math.max(1,Math.ceil(Math.hypot(o.vx,o.vy)*dt/2.5));
+    const sdt=dt/steps;
+    for(let s=0;s<steps;s++){
+      o.x+=o.vx*sdt; o.y+=o.vy*sdt;
+      // murs
+      if(o.x<world.wallL+o.r){o.x=world.wallL+o.r;o.vx=Math.abs(o.vx);}
+      if(o.x>world.wallR-o.r){o.x=world.wallR-o.r;o.vx=-Math.abs(o.vx);}
+      if(o.y<world.top+o.r){o.y=world.top+o.r;o.vy=Math.abs(o.vy);}
+      // raquette
+      const p=G.paddle;
+      if(o.vy>0 && o.y+o.r>=p.y-p.h/2 && o.y-o.r<=p.y+p.h/2 && o.x>=p.x-p.w/2-o.r && o.x<=p.x+p.w/2+o.r && o.y<p.y+4){
+        o.y=p.y-p.h/2-o.r;
+        const rel=clamp((o.x-p.x)/(p.w/2),-1,1);
+        const sp=Math.min(210, Math.hypot(o.vx,o.vy)+4);
+        const ang=-Math.PI/2 + rel*0.95;
+        o.vx=Math.cos(ang)*sp + p.vx*0.18;
+        o.vy=Math.sin(ang)*sp;
+        if(o.vy>-30)o.vy=-30;
+        burst(o.x,o.y,'#7af5d0',5,1.4);
+      }
+      // tours = bumpers
+      for(const t of G.towers){
+        const rr=o.r+t.r;
+        if(dist2(o.x,o.y,t.x,t.y)<rr*rr){
+          const dx=o.x-t.x,dy=o.y-t.y,d=Math.hypot(dx,dy)||0.001;
+          const nx=dx/d,ny=dy/d;
+          o.x=t.x+nx*rr; o.y=t.y+ny*rr;
+          const dot=o.vx*nx+o.vy*ny;
+          o.vx-=2*dot*nx; o.vy-=2*dot*ny;
+          // léger boost pour garder la bille vive
+          const sp=Math.min(230,Math.hypot(o.vx,o.vy)*1.04+6);
+          const m=sp/(Math.hypot(o.vx,o.vy)||1); o.vx*=m;o.vy*=m;
+          t.pulse=1; t.cd=Math.max(t.cd,0);
+          towerEffect(t,o);
+        }
+      }
+      // ennemis = briques
+      for(const e of G.enemies){
+        const rr=o.r+e.r;
+        if(dist2(o.x,o.y,e.x,e.y)<rr*rr){
+          const dx=o.x-e.x,dy=o.y-e.y,d=Math.hypot(dx,dy)||0.001;
+          const nx=dx/d,ny=dy/d;
+          o.x=e.x+nx*rr; o.y=e.y+ny*rr;
+          const dot=o.vx*nx+o.vy*ny;
+          o.vx-=2*dot*nx; o.vy-=2*dot*ny;
+          hitEnemy(e,o.fire>0?2:1,o.x,o.y);
+          if(o.fire>0){ o.fire--; e.burn=Math.max(e.burn,3); e.burnT=0.5; burst(e.x,e.y,'#ff7a2e',5,1.6);}
+        }
+      }
+      // perdu en bas ?
+      if(o.y-o.r>BASE_H){ o.dead=true; break; }
+    }
+    // traînée
+    o.trail.push({x:o.x,y:o.y}); if(o.trail.length>10)o.trail.shift();
+  }
+  // gestion des billes perdues
+  const before=G.orbs.length;
+  G.orbs=G.orbs.filter(o=>!o.dead);
+  if(G.orbs.length===0){
+    // perdre une vie cristal + re-servir
+    G.hp-=1; shake=1; flashCol='255,80,120'; flash=.4; refreshHUD();
+    if(G.hp>0) serveOrb(true);
+  }
+}
+
+function towerEffect(t,o){
+  const T=TOWERS[t.type];
+  flashCol=hexToRgb(T.c);
+  if(t.type===0){ // prisme: chance de dédoubler
+    if(G.orbs.length<4 && Math.random()<0.5){
+      const ang=Math.atan2(o.vy,o.vx)+rand(-0.9,0.9);
+      const sp=Math.hypot(o.vx,o.vy);
+      G.orbs.push({x:o.x,y:o.y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,r:o.r,fire:o.fire,held:false,trail:[],split:true});
+      burst(t.x,t.y,'#ff7ad0',8,1.8);
+    }
+  } else if(t.type===1){ // brasier: enflamme la bille
+    o.fire=4; burst(t.x,t.y,'#ffb44d',6,1.6);
+  } else if(t.type===3){ // foudre: éclair en chaîne
+    if(t.cd<=0){ t.cd=0.5; chainLightning(t.x,t.y); }
+  }
+  // givre (type 2) agit en aura passive, voir updateTowers
+  for(let i=0;i<5;i++) spark(t.x,t.y,T.c,rand(.3,.7));
+}
+
+function chainLightning(x,y){
+  let near=G.enemies.slice().sort((a,b)=>dist2(x,y,a.x,a.y)-dist2(x,y,b.x,b.y)).slice(0,3);
+  let lx0=x,ly0=y;
+  for(const e of near){
+    G.bolts.push({x1:lx0,y1:ly0,x2:e.x,y2:e.y,life:.16});
+    hitEnemy(e,3,e.x,e.y);
+    lx0=e.x; ly0=e.y;
+  }
+}
+
+function hitEnemy(e,dmg,hx,hy){
+  e.hp-=dmg; e.hit=0.12;
+  burst(hx,hy,'#fff7da',6,1.8);
+  if(e.hp<=0){
+    killEnemy(e);
+  }
+}
+function killEnemy(e){
+  e.dead=true;
+  G.shards+=e.rew; refreshHUD();
+  burst(e.x,e.y,e.type==='wisp'?'#6ad0ff':'#b06bff',e.type==='tank'||e.type==='boss'?22:12,2.4);
+  burst(e.x,e.y,'#ffd27a',6,1.6);
+  shake=Math.max(shake, e.type==='boss'?1.2:e.type==='tank'?.6:.25);
+}
+
+function updateEnemies(dt){
+  for(const e of G.enemies){
+    e.wob+=dt*e.wobsp;
+    let sp=e.sp*(e.slow>0?0.45:1);
+    e.y+=sp*dt;
+    e.x=clamp(e.baseX+Math.sin(e.wob)*e.wamp, world.wallL+e.r, world.wallR-e.r);
+    if(e.slow>0)e.slow-=dt;
+    if(e.hit>0)e.hit-=dt;
+    if(e.burn>0){ e.burnT-=dt; if(e.burnT<=0){ e.burnT=0.5; e.burn-=1; e.hp-=1; spark(e.x,e.y,'#ff7a2e',.4); if(e.hp<=0)killEnemy(e); } }
+    // atteint la ligne du cristal
+    if(e.y> world.defLine){
+      e.dead=true; G.hp-=e.dmg; shake=Math.max(shake,.7); flashCol='255,80,120'; flash=.45;
+      burst(e.x,world.defLine,'#ff5078',14,2.2); refreshHUD();
+    }
+  }
+  // aura de givre
+  for(const t of G.towers){ if(t.type===2){ for(const e of G.enemies){ if(dist2(t.x,t.y,e.x,e.y)<46*46){ e.slow=0.4; } } } }
+  G.enemies=G.enemies.filter(e=>!e.dead);
+}
+
+function updateTowers(dt){
+  for(const t of G.towers){ if(t.cd>0)t.cd-=dt; if(t.pulse>0)t.pulse=Math.max(0,t.pulse-dt*3); }
+}
+function updateParts(dt){
+  for(const p of G.parts){ p.life-=dt; p.vy+=p.g*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; }
+  G.parts=G.parts.filter(p=>p.life>0);
+}
+
+/* ================= Render ================= */
+function px(x,y,w,h,c){ bx.fillStyle=c; bx.fillRect(x|0,y|0,w,h); }
+
+function render(){
+  const W=BASE_W,H=BASE_H;
+  bx.clearRect(0,0,W,H);
+
+  /* --- parallax fond --- */
+  drawBackground();
+
+  /* --- terrain --- */
+  const ph=world.defLine;
+  // sol / zone basse
+  let gg=bx.createLinearGradient(0,ph-60,0,H);
+  gg.addColorStop(0,'rgba(20,14,34,0)'); gg.addColorStop(1,'rgba(10,7,20,.9)');
+  bx.fillStyle=gg; bx.fillRect(0,ph-60,W,H-(ph-60));
+  // ligne de défense (cristal)
+  bx.fillStyle='rgba(122,245,208,.10)'; bx.fillRect(world.wallL,ph,world.wallR-world.wallL,2);
+  // murs latéraux
+  px(0,0,world.wallL,H,'#0d0a18'); px(world.wallR,0,W-world.wallR,H,'#0d0a18');
+  px(world.wallL-1,0,1,H,'rgba(140,110,220,.25)'); px(world.wallR,0,1,H,'rgba(140,110,220,.25)');
+
+  // emplacements de construction (si armé)
+  if(armed>=0){
+    bx.fillStyle='rgba(150,120,230,.10)';
+    bx.fillRect(world.wallL+6,64,world.wallR-world.wallL-12,(world.paddleY-40)-64);
+  }
+
+  drawCrystal();
+  drawTowers();
+  drawEnemies();
+  drawPaddle();
+  drawOrbs();
+
+  /* --- glow additif --- */
+  bx.globalCompositeOperation='lighter';
+  drawGlow();
+  bx.globalCompositeOperation='source-over';
+
+  drawParts();
+
+  /* --- ÉCLAIRAGE : light map en multiply --- */
+  buildLightMap();
+  bx.globalCompositeOperation='multiply';
+  bx.drawImage(lbuf,0,0);
+  bx.globalCompositeOperation='source-over';
+
+  // vignette
+  let vg=bx.createRadialGradient(W/2,H*0.42,H*0.2,W/2,H*0.5,H*0.75);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(4,2,10,.6)');
+  bx.fillStyle=vg; bx.fillRect(0,0,W,H);
+
+  // flash plein écran
+  if(flash>0){ bx.fillStyle='rgba('+flashCol+','+(flash*0.35)+')'; bx.fillRect(0,0,W,H); }
+
+  // bannière de vague
+  const ban=document.getElementById('banner');
+  if(bannerT>0){ ban.textContent=bannerTxt; ban.style.opacity = bannerT>0.4?1:bannerT/0.4; }
+  else ban.style.opacity=0;
+
+  /* --- blit final upscalé (avec shake) --- */
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const sx = shake>0 ? (Math.random()*2-1)*shake*5 : 0;
+  const sy = shake>0 ? (Math.random()*2-1)*shake*5 : 0;
+  ctx.drawImage(buf, 0,0,W,H, sx*VIEW.dpr, sy*VIEW.dpr, cv.width, cv.height);
+}
+
+function drawBackground(){
+  const W=BASE_W,H=BASE_H;
+  // ciel
+  let sky=bx.createLinearGradient(0,0,0,H*0.7);
+  sky.addColorStop(0,'#0b0a1c'); sky.addColorStop(0.5,'#171033'); sky.addColorStop(1,'#241a44');
+  bx.fillStyle=sky; bx.fillRect(0,0,W,H);
+  // étoiles (parallax léger via temps)
+  for(const s of stars){ const tw=0.4+0.6*Math.abs(Math.sin(s.t+performance.now()/900));
+    bx.fillStyle='rgba(220,210,255,'+(0.25+0.6*s.b*tw)+')'; bx.fillRect(s.x|0,s.y|0,1,1); }
+  // lune
+  const mx=W*0.74,my=H*0.13;
+  bx.fillStyle='#f4e9c9'; bx.beginPath(); bx.arc(mx,my,16,0,7); bx.fill();
+  bx.fillStyle='#241a44'; bx.beginPath(); bx.arc(mx+6,my-3,14,0,7); bx.fill();
+  // montagnes lointaines (parallax 1)
+  const off1=(G&&G.paddle? (G.paddle.x-W/2)*0.012:0);
+  bx.fillStyle='#1d1840';
+  drawHills(H*0.42, 26, 0.9, off1);
+  // forêt proche (parallax 2)
+  const off2=(G&&G.paddle? (G.paddle.x-W/2)*0.03:0);
+  bx.fillStyle='#13251f';
+  drawHills(H*0.5, 20, 1.6, off2);
+  bx.fillStyle='#0f1b18';
+  drawHills(H*0.56, 14, 2.3, off2*1.5);
+}
+function drawHills(base,amp,freq,off){
+  const W=BASE_W;
+  bx.beginPath(); bx.moveTo(0,base+amp);
+  for(let x=0;x<=W;x+=4){ const y=base+Math.sin((x*freq)/40+off+base)*amp*0.5+Math.sin(x/90+off)*amp*0.5; bx.lineTo(x,y); }
+  bx.lineTo(W,BASE_H); bx.lineTo(0,BASE_H); bx.closePath(); bx.fill();
+}
+
+function drawCrystal(){
+  const W=BASE_W, cy=world.defLine+ (BASE_H-world.defLine)/2 -2, cx=W/2;
+  const t=performance.now()/600;
+  const pulse=0.5+0.5*Math.sin(t);
+  // socle
+  px(cx-12,cy+6,24,5,'#1b1430');
+  // cristal pixel
+  bx.fillStyle=PAL.crystalDark;
+  bx.beginPath(); bx.moveTo(cx,cy-12); bx.lineTo(cx+8,cy-2); bx.lineTo(cx+4,cy+8); bx.lineTo(cx-4,cy+8); bx.lineTo(cx-8,cy-2); bx.closePath(); bx.fill();
+  bx.fillStyle=PAL.crystal;
+  bx.beginPath(); bx.moveTo(cx,cy-12); bx.lineTo(cx+5,cy-2); bx.lineTo(cx,cy+6); bx.lineTo(cx-5,cy-2); bx.closePath(); bx.fill();
+  px(cx-2,cy-8,2,8,'rgba(255,255,255,'+(0.4+0.4*pulse)+')');
+}
+
+function drawTowers(){
+  for(const t of G.towers){
+    const T=TOWERS[t.type];
+    const s=1+t.pulse*0.25;
+    const r=t.r;
+    // base sombre
+    px(t.x-r-1,t.y+r-2,(r+1)*2,4,'#120e22');
+    // corps cristal pixel selon type
+    bx.save(); bx.translate(t.x,t.y); bx.scale(s,s);
+    bx.fillStyle=T.c;
+    bx.beginPath(); bx.moveTo(0,-r); bx.lineTo(r*0.8,0); bx.lineTo(0,r); bx.lineTo(-r*0.8,0); bx.closePath(); bx.fill();
+    bx.fillStyle='rgba(255,255,255,.5)';
+    bx.beginPath(); bx.moveTo(0,-r); bx.lineTo(r*0.35,-r*0.3); bx.lineTo(0,r*0.2); bx.lineTo(-r*0.35,-r*0.3); bx.closePath(); bx.fill();
+    bx.restore();
+  }
+}
+
+function drawEnemies(){
+  for(const e of G.enemies){
+    const d=ENEMY[e.type];
+    const r=e.r;
+    // ombre/corps
+    bx.fillStyle = e.hit>0? '#ffffff' : d.body;
+    if(e.type==='wisp'){
+      // feu-follet rond avec halo
+      bx.beginPath(); bx.arc(e.x,e.y,r,0,7); bx.fill();
+      bx.fillStyle = e.hit>0?'#fff':d.hi; bx.beginPath(); bx.arc(e.x,e.y,r*0.55,0,7); bx.fill();
+    } else {
+      // blob pixel
+      px(e.x-r,e.y-r+1,r*2,r*2-1, e.hit>0?'#fff':d.body);
+      px(e.x-r+1,e.y-r,r*2-2,2, e.hit>0?'#fff':d.body);
+      // crête/highlight
+      px(e.x-r,e.y-r+1,r*2,2, e.hit>0?'#fff':d.hi);
+    }
+    // yeux
+    bx.fillStyle=d.eye;
+    const ey=e.y-(e.type==='wisp'?0:r*0.2);
+    px(e.x-r*0.45,ey,2,2,d.eye); px(e.x+r*0.45-2,ey,2,2,d.eye);
+    // barre de vie (si entamé / gros)
+    if(e.hp<e.maxhp){
+      const w=r*2; const f=clamp(e.hp/e.maxhp,0,1);
+      px(e.x-r,e.y-r-4,w,2,'#3a1f2e'); px(e.x-r,e.y-r-4,w*f,2,'#ff5078');
+    }
+    if(e.burn>0){ px(e.x-1,e.y-r-2,2,2,'#ff7a2e'); }
+  }
+}
+
+function drawPaddle(){
+  const p=G.paddle;
+  const x=p.x-p.w/2, y=p.y-p.h/2;
+  // bois
+  px(x,y,p.w,p.h,PAL.paddleDark);
+  px(x,y,p.w,2,PAL.paddle);
+  px(x+1,y+p.h-1,p.w-2,1,'#5a4422');
+  // rune centrale lumineuse
+  const t=performance.now()/300;
+  px(p.x-2,y+1,4,p.h-2,PAL.paddleRune);
+  px(p.x-1,y,2,1,'rgba(255,255,255,'+(0.6+0.4*Math.sin(t))+')');
+}
+
+function drawOrbs(){
+  for(const o of G.orbs){
+    // traînée
+    for(let i=0;i<o.trail.length;i++){ const tp=o.trail[i]; const a=i/o.trail.length;
+      bx.fillStyle='rgba('+(o.fire>0?'255,150,60':'255,225,150')+','+(a*0.35)+')';
+      bx.fillRect((tp.x-1)|0,(tp.y-1)|0,2,2); }
+    // noyau
+    bx.fillStyle=o.fire>0?'#fff0d0':PAL.orbCore;
+    bx.beginPath(); bx.arc(o.x,o.y,o.r,0,7); bx.fill();
+    bx.fillStyle='#fff'; bx.fillRect((o.x-1)|0,(o.y-1)|0,1,1);
+  }
+}
+
+/* glow additif (bloom néon) */
+function drawGlow(){
+  for(const o of G.orbs){ radial(o.x,o.y,14,o.fire>0?'rgba(255,150,60,0.5)':'rgba(255,220,150,0.5)'); }
+  for(const t of G.towers){ const T=TOWERS[t.type]; radial(t.x,t.y,12+t.pulse*8, rgba(hexToRgb(T.g),0.32+t.pulse*0.4)); }
+  // éclairs
+  bx.strokeStyle='rgba(200,180,255,0.9)'; bx.lineWidth=1.4;
+  for(const b of G.bolts){ const a=b.life/0.16;
+    bx.strokeStyle='rgba(210,190,255,'+a+')';
+    bx.beginPath(); bx.moveTo(b.x1,b.y1);
+    const mx=(b.x1+b.x2)/2+rand(-6,6),my=(b.y1+b.y2)/2+rand(-6,6);
+    bx.lineTo(mx,my); bx.lineTo(b.x2,b.y2); bx.stroke();
+  }
+}
+function radial(x,y,r,col){ const g=bx.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,col); g.addColorStop(1,'rgba(0,0,0,0)'); bx.fillStyle=g; bx.beginPath(); bx.arc(x,y,r,0,7); bx.fill(); }
+
+function drawParts(){
+  for(const p of G.parts){ const a=clamp(p.life/p.max,0,1); bx.fillStyle=rgba(hexToRgb(p.col),a); bx.fillRect((p.x)|0,(p.y)|0,p.sz|0||1,p.sz|0||1); }
+}
+
+/* ===== Light map (multiply) ===== */
+function buildLightMap(){
+  const W=BASE_W,H=BASE_H;
+  lx.globalCompositeOperation='source-over';
+  lx.fillStyle='#43406b';          // ambiance nocturne (gris-violet) = niveau mini
+  lx.fillRect(0,0,W,H);
+  lx.globalCompositeOperation='lighter';
+  // lune
+  lLight(W*0.74,H*0.13,90,'rgba(255,245,210,0.5)');
+  // bille = source forte
+  for(const o of G.orbs){ lLight(o.x,o.y,o.fire>0?70:58, o.fire>0?'rgba(255,170,80,1)':'rgba(255,240,200,1)'); }
+  // tours
+  for(const t of G.towers){ const T=TOWERS[t.type]; lLight(t.x,t.y,T.light+t.pulse*16, rgba(hexToRgb(T.g),0.9)); }
+  // cristal
+  lLight(W/2,world.defLine+8,54,'rgba(122,245,208,0.8)');
+  // explosions récentes via particules brillantes
+  for(const p of G.parts){ if(p.life>p.max*0.5){ lLight(p.x,p.y,8,'rgba(255,230,180,0.5)'); } }
+  lx.globalCompositeOperation='source-over';
+}
+function lLight(x,y,r,col){ const g=lx.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,col); g.addColorStop(1,'rgba(0,0,0,0)'); lx.fillStyle=g; lx.beginPath(); lx.arc(x,y,r,0,7); lx.fill(); }
+
+/* ===== couleur utils ===== */
+function hexToRgb(h){ h=h.replace('#',''); if(h.length===3)h=h.split('').map(c=>c+c).join(''); const n=parseInt(h,16); return (n>>16&255)+','+(n>>8&255)+','+(n&255); }
+function rgba(rgb,a){ return 'rgba('+rgb+','+a+')'; }
+
+/* ================= Loop ================= */
+function frame(t){
+  if(!running){ return; }
+  const dt=Math.min(0.033,(t-lastT)/1000||0); lastT=t;
+  update(dt);
+  render();
+  requestAnimationFrame(frame);
+}
+
+/* ================= Flow ================= */
+function startGame(){
+  resize(); newGame();
+  document.getElementById('start').classList.add('hidden');
+  document.getElementById('over').classList.add('hidden');
+  running=true; lastT=performance.now(); requestAnimationFrame(frame);
+}
+function gameOver(win){
+  if(!running) return;
+  running=false;
+  document.getElementById('overTitle').textContent = win?'AUBE VICTORIEUSE':'LE CRISTAL TOMBE';
+  document.getElementById('overStat').innerHTML = 'Vague atteinte : '+G.wave+'<br>Éclats : '+G.shards;
+  document.getElementById('over').classList.remove('hidden');
+}
+document.getElementById('play').addEventListener('click',startGame);
+document.getElementById('again').addEventListener('click',startGame);
+
+/* boot */
+resize();
+// petit rendu d'ambiance derrière le menu
+(function ambient(){ if(running)return; bx.clearRect(0,0,BASE_W,BASE_H); G={paddle:{x:BASE_W/2},orbs:[],towers:[],parts:[]}; drawBackground(); buildLightMap(); bx.globalCompositeOperation='multiply'; bx.drawImage(lbuf,0,0); bx.globalCompositeOperation='source-over'; ctx.clearRect(0,0,cv.width,cv.height); ctx.drawImage(buf,0,0,BASE_W,BASE_H,0,0,cv.width,cv.height); G=null; requestAnimationFrame(ambient); })();
+</script>
+</body>
+</html>
